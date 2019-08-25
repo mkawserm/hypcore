@@ -179,3 +179,9 @@ func (c *HContext) ClearKeyValueStore() {
 	defer c.Lock.Unlock()
 	c.KeyValueStore = make(map[string]string)
 }
+
+func (c *HContext) SetKeyValueStore(dataMap map[string]string) {
+	c.Lock.Lock()
+	defer c.Lock.Unlock()
+	c.KeyValueStore = dataMap
+}

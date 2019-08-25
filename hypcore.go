@@ -306,3 +306,7 @@ func (h *HypCore) RemoveValue(key string) {
 func (h *HypCore) ClearKeyValueStore() {
 	h.context.ClearKeyValueStore()
 }
+
+func (h *HypCore) SetKeyValueStore(dataMap map[string]string) {
+	h.context.SetKeyValueStore(dataMap)
+}
