@@ -1,6 +1,7 @@
 package hypcore
 
 import (
+	"flag"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
@@ -29,6 +30,11 @@ type HypCoreConfig struct {
 	EnableTLS bool
 	CertFile  string
 	KeyFile   string
+}
+
+func init() {
+	//flag.Usage =
+	flag.Parse()
 }
 
 //Create new HypCore server
