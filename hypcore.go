@@ -288,17 +288,17 @@ func (h *HypCore) AddGraphQLMutationField(name string, field *graphql.Field) {
 //}
 
 func (h *HypCore) GetValue(key string) string {
-	return h.GetValue(key)
+	return h.context.GetValue(key)
 }
 
 func (h *HypCore) SetValue(key string, value string) {
-	h.SetValue(key, value)
+	h.context.SetValue(key, value)
 }
 
 func (h *HypCore) RemoveValue(key string) {
-	h.RemoveValue(key)
+	h.context.RemoveValue(key)
 }
 
 func (h *HypCore) ClearKeyValueStore() {
-	h.ClearKeyValueStore()
+	h.context.ClearKeyValueStore()
 }
