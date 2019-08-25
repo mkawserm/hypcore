@@ -1,8 +1,8 @@
 package views
 
 import (
+	"github.com/golang/glog"
 	"github.com/mkawserm/hypcore/core"
-	"log"
 	"net/http"
 	"regexp"
 )
@@ -12,7 +12,7 @@ type DynamicView struct {
 }
 
 func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Printf("PATH: " + r.URL.Path)
+	glog.Infoln("PATH: " + r.URL.Path)
 
 	// check for auth
 	if dView.Context.HasAuth() {
@@ -40,16 +40,16 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Printf("Processing Middleware in the DynamicView.")
+	glog.Infoln("Processing Middleware in the DynamicView.")
 	for _, mi := range dView.Context.MiddlewareList {
 		next := mi.ServeHTTP(dView.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	log.Printf("Middleware processing complete.")
+	glog.Infoln("Middleware processing complete.")
 
-	log.Printf("Dynamic route dispatch started.")
+	glog.Infoln("Dynamic route dispatch started.")
 	for _, route := range dView.Context.RouteList {
 		var rc = regexp.MustCompile(route.Pattern)
 		if rc.Match([]byte(r.URL.Path)) {
@@ -58,8 +58,8 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Printf("Dynamic route dispatch failed to find a route.")
-	log.Printf("Showing 404 Http Error")
+	glog.Infoln("Dynamic route dispatch failed to find a route.")
+	glog.Errorln("Showing 404 Http Error")
 
 	httpNotFound(w, []byte("Oops!!!"))
 }

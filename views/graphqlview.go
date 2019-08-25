@@ -2,10 +2,10 @@ package views
 
 import (
 	"encoding/json"
+	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
 	"github.com/mkawserm/hypcore/core"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -14,7 +14,7 @@ type GraphQLView struct {
 }
 
 func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Printf("PATH: " + r.URL.Path)
+	glog.Infoln("PATH: " + r.URL.Path)
 
 	// check for auth
 	if gqlView.Context.HasAuth() {
@@ -42,14 +42,14 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Printf("Processing Middleware in the GraphQLView.")
+	glog.Infoln("Processing Middleware in the GraphQLView.")
 	for _, mi := range gqlView.Context.MiddlewareList {
 		next := mi.ServeHTTP(gqlView.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	log.Printf("Middleware processing complete.")
+	glog.Infoln("Middleware processing complete.")
 
 	if r.Method != http.MethodPost {
 		httpBadRequest(w, []byte("Oops! GraphQL query must be done using post request !!!"))
@@ -65,7 +65,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params := graphql.Params{Schema: gqlView.Context.GraphQLSchema, RequestString: string(bodyBytes)}
 	res := graphql.Do(params)
 	if len(res.Errors) > 0 {
-		log.Printf("failed to execute graphql operation, errors: %+v", res.Errors)
+		glog.Errorln("failed to execute graphql operation, errors: %+v", res.Errors)
 		httpBadRequest(w, []byte("Oops! GraphQL query execution error!!!"))
 		return
 	}

@@ -2,8 +2,8 @@ package views
 
 import (
 	"github.com/gobwas/ws"
+	"github.com/golang/glog"
 	"github.com/mkawserm/hypcore/core"
-	"log"
 	"net/http"
 )
 
@@ -68,7 +68,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				}
 
 				if err := wsu.Context.AddConnection(conn); err != nil {
-					log.Printf("Failed to add connection %v", err)
+					glog.Errorln("Failed to add connection %v", err)
 					_ = conn.Close()
 				} else {
 					//NOTE Only if has websocket auth
@@ -90,7 +90,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			}
 
 			if err := wsu.Context.AddConnection(conn); err != nil {
-				log.Printf("Failed to add connection %v", err)
+				glog.Errorln("Failed to add connection %v", err)
 				_ = conn.Close()
 			}
 
