@@ -39,6 +39,7 @@ func init() {
 
 //Create new HypCore server
 func NewHypCore(hc *HypCoreConfig) *HypCore {
+	flag.Parse()
 
 	if hc.Auth != nil && hc.OnlineUserDataStore == nil {
 		glog.Fatal("Auth found but no OnlineUserDataStore found. Please configure OnlineUserDataStore.")
