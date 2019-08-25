@@ -200,7 +200,7 @@ func (h *HypCore) runMainEventLoop() {
 
 			} else {
 				// Actual Message
-				//log.Printf("msg: %s", string(msg))
+				// glog.Infoln("msg: %s", string(msg))
 
 				// Call Message Server to process the message
 				if h.context.ServeWS != nil {
@@ -214,18 +214,18 @@ func (h *HypCore) runMainEventLoop() {
 // Start HypCore server
 func (h *HypCore) Start() {
 	if h.ready == false {
-		panic("please call Setup() first")
+		glog.Fatalln("please call Setup() first")
 	}
 	if h.context == nil {
-		panic("context has not properly configured.")
+		glog.Fatalln("context has not properly configured.")
 	}
 
 	if h.context.ConnectionEventPool == nil {
-		panic("Connection event pool has not properly configured.")
+		glog.Fatalln("Connection event pool has not properly configured.")
 	}
 
 	if h.context.ServerMux == nil {
-		panic("Server Mux has not properly configured.")
+		glog.Fatalln("Server Mux has not properly configured.")
 	}
 
 	var rLimit syscall.Rlimit
