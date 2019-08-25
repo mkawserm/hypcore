@@ -66,7 +66,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res := graphql.Do(params)
 	if len(res.Errors) > 0 {
 		glog.Errorln("failed to execute graphql operation, errors: %+v", res.Errors)
-		httpBadRequest(w, []byte("Oops! GraphQL query execution error!!!"))
+		httpBadRequest(w, []byte("Oops! GraphQL query execution error. Invalid query!!!"))
 		return
 	}
 
