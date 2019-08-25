@@ -287,23 +287,22 @@ func (h *HypCore) AddGraphQLMutationField(name string, field *graphql.Field) {
 	h.context.AddGraphQLMutationField(name, field)
 }
 
-// Create new random websocket auth
-//func NewRandomWebSocketAuth() *internal.RandomWebSocketAuth {
-//	return &internal.RandomWebSocketAuth{}
-//}
-
+// Get value using the key from the key value store of context
 func (h *HypCore) GetValue(key string) string {
 	return h.context.GetValue(key)
 }
 
+// Set value in the key value store of context
 func (h *HypCore) SetValue(key string, value string) {
 	h.context.SetValue(key, value)
 }
 
+// Remove a value from the key value store of context
 func (h *HypCore) RemoveValue(key string) {
 	h.context.RemoveValue(key)
 }
 
+// Clear key value store of context
 func (h *HypCore) ClearKeyValueStore() {
 	h.context.ClearKeyValueStore()
 }
