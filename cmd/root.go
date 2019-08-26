@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/logrusorgru/aurora"
 	"github.com/mkawserm/hypcore/xcore"
+	"strings"
+
 	//"github.com/mkawserm/hypcore/z"
 	"github.com/spf13/cobra"
 	"os"
@@ -38,6 +41,23 @@ var shellCmd = &cobra.Command{
 	Use:   "shell",
 	Short: "Hyper Core shell",
 	Run: func(cmd *cobra.Command, args []string) {
+		reader := bufio.NewReader(os.Stdin)
+
+		for {
+			fmt.Print(aurora.Bold(aurora.Green("HypCore$ ")))
+			cmdString, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			cmdString = strings.TrimSuffix(cmdString, "\n")
+
+			switch cmdString {
+			case "clear":
+				fmt.Print("\x1b[H\x1b[2J")
+			case "exit":
+				os.Exit(1)
+			}
+		}
 
 	},
 }
