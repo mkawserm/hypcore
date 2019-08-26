@@ -56,6 +56,8 @@ var shellCmd = &cobra.Command{
 				fmt.Print("\x1b[H\x1b[2J")
 			case "version":
 				fmt.Println(aurora.Green(xcore.VERSION))
+			case "authors":
+				fmt.Println(aurora.Green(xcore.AUTHORS))
 			case "exit":
 				os.Exit(1)
 			}
