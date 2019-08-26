@@ -64,7 +64,7 @@ var shellCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func Setup() {
 	hypCoreRootCmd.AddCommand(shellCmd)
 	hypCoreRootCmd.AddCommand(authorsCmd)
 	hypCoreRootCmd.AddCommand(versionCmd)
