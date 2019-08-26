@@ -1,8 +1,12 @@
 <component name="ProjectDictionaryState">
   <dictionary name="mkm">
     <words>
+      <w>conntrack</w>
       <w>glog</w>
+      <w>hypcore</w>
       <w>infoln</w>
+      <w>mkawserm</w>
+      <w>netfilter</w>
     </words>
   </dictionary>
 </component>

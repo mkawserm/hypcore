@@ -1,4 +1,4 @@
-package hypcore
+package xcore
 
 import (
 	"flag"
