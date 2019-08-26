@@ -1,2 +1,3 @@
-# hypcore
-Hyper Core is a small reusable go library to build micro service
+# HypCore
+Hyper Core is a small reusable golang package to build micro service
+
