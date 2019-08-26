@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-var rootCmd = &cobra.Command{
+var hypCoreRootCmd = &cobra.Command{
 	Use:   "hypcore",
 	Short: "Hyper Core micro service",
 	Long:  `Hyper Core is a small reusable golang package to build micro services`,
@@ -26,6 +26,14 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var authorCmd = &cobra.Command{
+	Use:   "authors",
+	Short: "Print the authors Hyper Core",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(aurora.Green(xcore.AUTHORS))
+	},
+}
+
 var shellCmd = &cobra.Command{
 	Use:   "shell",
 	Short: "Hyper Core shell",
@@ -35,12 +43,12 @@ var shellCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(shellCmd)
-	rootCmd.AddCommand(versionCmd)
+	hypCoreRootCmd.AddCommand(shellCmd)
+	hypCoreRootCmd.AddCommand(versionCmd)
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := hypCoreRootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
