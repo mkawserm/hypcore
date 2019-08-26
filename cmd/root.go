@@ -12,7 +12,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "hypcore",
 	Short: "Hyper Core micro service",
-	Long:  `Hyper Core is a small reusable golang package to build micro service`,
+	Long:  `Hyper Core is a small reusable golang package to build micro services`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Do Stuff Here
 	},
