@@ -26,7 +26,7 @@ var versionCmd = &cobra.Command{
 	},
 }
 
-var authorCmd = &cobra.Command{
+var authorsCmd = &cobra.Command{
 	Use:   "authors",
 	Short: "Print the authors Hyper Core",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -44,7 +44,7 @@ var shellCmd = &cobra.Command{
 
 func init() {
 	hypCoreRootCmd.AddCommand(shellCmd)
-	hypCoreRootCmd.AddCommand(authorCmd)
+	hypCoreRootCmd.AddCommand(authorsCmd)
 	hypCoreRootCmd.AddCommand(versionCmd)
 }
 
