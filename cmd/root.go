@@ -54,6 +54,8 @@ var shellCmd = &cobra.Command{
 			switch cmdString {
 			case "clear":
 				fmt.Print("\x1b[H\x1b[2J")
+			case "version":
+				fmt.Println(aurora.Green(xcore.VERSION))
 			case "exit":
 				os.Exit(1)
 			}
