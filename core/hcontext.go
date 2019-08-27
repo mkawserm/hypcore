@@ -48,6 +48,10 @@ type HContext struct {
 	GraphQLQueryFields    graphql.Fields
 	GraphQLMutationFields graphql.Fields
 	GraphQLSchema         graphql.Schema
+
+	EnableLivePath      bool
+	EnableGraphQLPath   bool
+	EnableWebSocketPath bool
 }
 
 func (c *HContext) AddGraphQLQueryField(name string, field *graphql.Field) {

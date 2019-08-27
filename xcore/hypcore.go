@@ -30,6 +30,10 @@ type HypCoreConfig struct {
 	EnableTLS bool
 	CertFile  string
 	KeyFile   string
+
+	EnableLivePath      bool
+	EnableGraphQLPath   bool
+	EnableWebSocketPath bool
 }
 
 func init() {
@@ -75,6 +79,10 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		KeyValueStore:         make(map[string]string),
 		GraphQLQueryFields:    make(graphql.Fields),
 		GraphQLMutationFields: make(graphql.Fields),
+
+		EnableLivePath:      hc.EnableLivePath,
+		EnableGraphQLPath:   hc.EnableGraphQLPath,
+		EnableWebSocketPath: hc.EnableWebSocketPath,
 	}
 
 	if hContext.ServeWS == nil {
@@ -151,20 +159,26 @@ func (h *HypCore) Setup() {
 
 	h.context.ServerMux = http.NewServeMux()
 
-	h.context.ServerMux.Handle(string(h.context.LivePath),
-		&views.LiveView{
-			Context: h.context,
-		})
+	if h.context.EnableLivePath == true {
+		h.context.ServerMux.Handle(string(h.context.LivePath),
+			&views.LiveView{
+				Context: h.context,
+			})
+	}
 
-	h.context.ServerMux.Handle(string(h.context.WebSocketUpgradePath),
-		&views.WebSocketUpgradeView{
-			Context: h.context,
-		})
+	if h.context.EnableWebSocketPath == true {
+		h.context.ServerMux.Handle(string(h.context.WebSocketUpgradePath),
+			&views.WebSocketUpgradeView{
+				Context: h.context,
+			})
+	}
 
-	h.context.ServerMux.Handle(string(h.context.GraphQLPath),
-		&views.GraphQLView{
-			Context: h.context,
-		})
+	if h.context.EnableGraphQLPath == true {
+		h.context.ServerMux.Handle(string(h.context.GraphQLPath),
+			&views.GraphQLView{
+				Context: h.context,
+			})
+	}
 
 	h.context.ServerMux.Handle(string([]byte("/")),
 		&views.DynamicView{
