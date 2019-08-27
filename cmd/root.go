@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/logrusorgru/aurora"
 	"github.com/mkawserm/hypcore/xcore"
+	"github.com/mkawserm/hypcore/z"
 	"strings"
 
 	//"github.com/mkawserm/hypcore/z"
@@ -13,9 +14,9 @@ import (
 )
 
 var hypCoreRootCmd = &cobra.Command{
-	Use:   "hypcore",
-	Short: "Hyper Core micro service",
-	Long:  `Hyper Core is a small reusable golang package to build micro services`,
+	Use:   z.ExeName(),
+	Short: xcore.AppNameLong + " micro service",
+	Long:  xcore.AppDescription,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Do Stuff Here
 		fmt.Println(cmd.UsageString())
@@ -26,7 +27,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of Hyper Core",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(aurora.Green(xcore.VERSION))
+		fmt.Println(aurora.Green(xcore.Version))
 	},
 }
 
@@ -34,7 +35,7 @@ var authorsCmd = &cobra.Command{
 	Use:   "authors",
 	Short: "Print the authors Hyper Core",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(aurora.Green(xcore.AUTHORS))
+		fmt.Println(aurora.Green(xcore.Authors))
 	},
 }
 
@@ -47,7 +48,7 @@ var shellCmd = &cobra.Command{
 		for {
 			input_counter++
 			fmt.Printf("%s%s%d%s%s ",
-				aurora.Bold(aurora.Green(xcore.APP_NAME)),
+				aurora.Bold(aurora.Green(xcore.AppName)),
 				aurora.Bold(aurora.Green("[")),
 				aurora.Bold(aurora.Red(input_counter)),
 				aurora.Bold(aurora.Green("]")),
@@ -63,9 +64,9 @@ var shellCmd = &cobra.Command{
 			case "clear":
 				fmt.Print("\x1b[H\x1b[2J")
 			case "version":
-				fmt.Println(aurora.Green(xcore.VERSION))
+				fmt.Println(aurora.Green(xcore.Version))
 			case "authors":
-				fmt.Println(aurora.Green(xcore.AUTHORS))
+				fmt.Println(aurora.Green(xcore.Authors))
 			case "exit":
 				os.Exit(1)
 			}

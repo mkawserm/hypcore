@@ -1,7 +1,9 @@
 package xcore
 
 var (
-	AUTHORS  = "Md Kawser Munshi"
-	VERSION  = "1.0.0"
-	APP_NAME = "HypCore"
+	Authors        = "Md Kawser Munshi"
+	Version        = "1.0.0"
+	AppName        = "HypCore"
+	AppNameLong    = "Hyper Core"
+	AppDescription = "Hyper Core is a small reusable golang package to build micro services"
 )
