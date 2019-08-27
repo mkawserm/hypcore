@@ -189,3 +189,7 @@ func (c *HContext) SetKeyValueStore(dataMap map[string]string) {
 	defer c.Lock.Unlock()
 	c.KeyValueStore = dataMap
 }
+
+func (c *HContext) TotalActiveWebSocketConnections() int {
+	return c.ConnectionEventPool.TotalActiveWebSocketConnections()
+}

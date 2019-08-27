@@ -130,6 +130,13 @@ func (e *EventPool) Wait() ([]net.Conn, error) {
 	return connections, nil
 }
 
+func (e *EventPool) TotalActiveWebSocketConnections() int {
+	e.lock.RLock()
+	defer e.lock.RUnlock()
+
+	return len(e.connectionMap)
+}
+
 func WebsocketFileDescriptor(conn net.Conn) int {
 	tcpConn := reflect.Indirect(reflect.ValueOf(conn)).FieldByName("conn")
 	fdVal := tcpConn.FieldByName("fd")

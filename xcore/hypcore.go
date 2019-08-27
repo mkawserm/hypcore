@@ -109,6 +109,14 @@ func (h *HypCore) Setup() {
 		Description: "Check if the service is live",
 	})
 
+	h.AddGraphQLQueryField("totalActiveWebSocketConnections", &graphql.Field{
+		Type: graphql.Int,
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			return h.context.TotalActiveWebSocketConnections(), nil
+		},
+		Description: "Get total active websocket connections",
+	})
+
 	h.AddGraphQLMutationField("updateLive", &graphql.Field{
 		Type: graphql.Boolean,
 		Args: graphql.FieldConfigArgument{
