@@ -18,6 +18,7 @@ var hypCoreRootCmd = &cobra.Command{
 	Long:  `Hyper Core is a small reusable golang package to build micro services`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Do Stuff Here
+		fmt.Println(cmd.UsageString())
 	},
 }
 
