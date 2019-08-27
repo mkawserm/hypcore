@@ -42,9 +42,16 @@ var shellCmd = &cobra.Command{
 	Short: "Hyper Core shell",
 	Run: func(cmd *cobra.Command, args []string) {
 		reader := bufio.NewReader(os.Stdin)
-
+		input_counter := 0
 		for {
-			fmt.Print(aurora.Bold(aurora.Green("HypCore$ ")))
+			input_counter++
+			fmt.Printf("%s%s%d%s%s ",
+				aurora.Bold(aurora.Green(xcore.APP_NAME)),
+				aurora.Bold(aurora.Green("[")),
+				aurora.Bold(aurora.Red(input_counter)),
+				aurora.Bold(aurora.Green("]")),
+				"$",
+			)
 			cmdString, err := reader.ReadString('\n')
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
