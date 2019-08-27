@@ -6,11 +6,9 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/mkawserm/hypcore/xcore"
 	"github.com/mkawserm/hypcore/z"
-	"strings"
-
-	//"github.com/mkawserm/hypcore/z"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 var hypCoreRootCmd = &cobra.Command{
