@@ -114,7 +114,7 @@ func (h *HypCore) Setup() {
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			return h.context.TotalActiveWebSocketConnections(), nil
 		},
-		Description: "Get total active websocket connections",
+		Description: "Query total active websocket connections",
 	})
 
 	h.AddGraphQLMutationField("updateLive", &graphql.Field{
