@@ -7,6 +7,7 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/mkawserm/hypcore/core"
 	"github.com/mkawserm/hypcore/views"
+	"github.com/mkawserm/hypcore/xdb"
 	"net/http"
 	"sync"
 	"syscall"
@@ -34,6 +35,8 @@ type HypCoreConfig struct {
 	EnableLivePath      bool
 	EnableGraphQLPath   bool
 	EnableWebSocketPath bool
+
+	DbPath string
 }
 
 func init() {
@@ -71,6 +74,8 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		Auth:                hc.Auth,
 		ServeWS:             hc.ServeWS,
 		OnlineUserDataStore: hc.OnlineUserDataStore,
+
+		StorageEngine: &xdb.StorageEngine{DbPath: hc.DbPath},
 
 		WebSocketUpgradePath: []byte("/ws"),
 		GraphQLPath:          []byte("/graphql"),

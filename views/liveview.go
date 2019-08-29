@@ -24,9 +24,9 @@ func (lView *LiveView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if lView.Context.GetIsLive() == true {
-		output = []byte("{\"isLive\":true,\"code\":200}")
+		output = []byte("{\"isLive\":true,\"success_code\":200}")
 	} else {
-		output = []byte("{\"isLive\":false,\"code\":200}")
+		output = []byte("{\"isLive\":false,\"success_code\":200}")
 	}
 
 	_, _ = w.Write(output)

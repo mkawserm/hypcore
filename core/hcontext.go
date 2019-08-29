@@ -5,6 +5,7 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
+	"github.com/mkawserm/hypcore/xdb"
 	"net"
 	"net/http"
 	"sync"
@@ -41,6 +42,7 @@ type HContext struct {
 	RouteList      []*Route              // read only while running the server
 
 	KeyValueStore map[string]string
+	StorageEngine *xdb.StorageEngine
 
 	//GraphQL related Objects
 	//GraphQLQuery *graphql.Object
@@ -116,6 +118,14 @@ func (c *HContext) GetIdList(uid string) []int {
 		return c.OnlineUserDataStore.GetIdList(uid)
 	} else {
 		return make([]int, 0)
+	}
+}
+
+func (c *HContext) GetUIDFromSID(sid int) string {
+	if c.OnlineUserDataStore != nil {
+		return c.OnlineUserDataStore.GetUIDFromSID(sid)
+	} else {
+		return ""
 	}
 }
 

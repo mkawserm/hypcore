@@ -3,6 +3,30 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/AndreasBriese/bbloom"
+  packages = ["."]
+  revision = "46b345b51c9667fcbaad862a370d73bd7aa802b6"
+
+[[projects]]
+  name = "github.com/dgraph-io/badger"
+  packages = [".","options","pb","skl","table","y"]
+  revision = "2fa005c9d4bf695277ab5214c1fbce3735b9562a"
+  version = "v1.6.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/dgryski/go-farm"
+  packages = ["."]
+  revision = "6a90982ecee230ff6cba02d5bd386acc030be9d3"
+
+[[projects]]
+  name = "github.com/dustin/go-humanize"
+  packages = ["."]
+  revision = "9f541cc9db5d55bce703bd99987c9d5cb8eea45e"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
   name = "github.com/gobwas/httphead"
   packages = ["."]
   revision = "2c6c146eadee0b69f856f87e3e9f1d0cd6aad2f5"
@@ -26,6 +50,12 @@
   revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[projects]]
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
+  revision = "6c65a5562fc06764971b7c5d05c76c75e84bdbf7"
+  version = "v1.3.2"
+
+[[projects]]
   name = "github.com/graphql-go/graphql"
   packages = [".","gqlerrors","language/ast","language/kinds","language/lexer","language/location","language/parser","language/printer","language/source","language/typeInfo","language/visitor"]
   revision = "2b0b7340d2285b861482047fbf5de0488e021bea"
@@ -44,6 +74,18 @@
   version = "v2.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mmcloughlin/avo"
+  packages = ["attr","build","buildtags","gotypes","internal/prnt","internal/stack","ir","operand","pass","printer","reg","src","x86"]
+  revision = "bb615f61ce85790a1667efc145c66e917cce1a39"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
+
+[[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5"
@@ -57,13 +99,25 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/net"
+  packages = ["internal/timeseries","trace"]
+  revision = "ba9fcec4b297b415637633c5a6e8fa592e4a16c3"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
   revision = "c7b8b68b14567162c6602a7c5659ee0f26417c18"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/tools"
+  packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
+  revision = "f4d8977246093ee4389026a1f5e51666d7371b54"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "575f86dfe306948b738365a6cb15efbd9acf8f94307f49cd8746f14de4068d37"
+  inputs-digest = "d4014e6b1a8d27ef99de06aba85381845d81f4c29f779111df74b6af11eb6a05"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -5,5 +5,5 @@ import (
 )
 
 type ServeHTTPInterface interface {
-	ServeHTTP(context *HContext, request *http.Request, response http.ResponseWriter)
+	ServeHTTP(ctx *HContext, request *http.Request, response http.ResponseWriter)
 }

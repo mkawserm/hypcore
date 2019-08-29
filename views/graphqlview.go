@@ -1,6 +1,7 @@
 package views
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
@@ -16,9 +17,10 @@ type GraphQLView struct {
 func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("PATH: " + r.URL.Path)
 
+	uid := ""
+
 	// check for auth
 	if gqlView.Context.HasAuth() {
-		uid := ""
 		ok := false
 
 		h := httpGetHeader(r.Header, core.HeaderAuthorizationCanonical)
@@ -62,7 +64,20 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := graphql.Params{Schema: gqlView.Context.GraphQLSchema, RequestString: string(bodyBytes)}
+	var params graphql.Params
+
+	if gqlView.Context.HasAuth() {
+		params = graphql.Params{
+			Schema:        gqlView.Context.GraphQLSchema,
+			RequestString: string(bodyBytes),
+			Context: context.WithValue(context.Background(),
+				"auth",
+				map[string]string{"uid": uid}),
+		}
+	} else {
+		params = graphql.Params{Schema: gqlView.Context.GraphQLSchema, RequestString: string(bodyBytes)}
+	}
+
 	res := graphql.Do(params)
 	if len(res.Errors) > 0 {
 		glog.Errorln("failed to execute graphql operation, errors: %+v", res.Errors)

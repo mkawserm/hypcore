@@ -16,7 +16,6 @@ var hypCoreRootCmd = &cobra.Command{
 	Short: xcore.AppNameLong + " micro service",
 	Long:  xcore.AppDescription,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Do Stuff Here
 		fmt.Println(cmd.UsageString())
 	},
 }

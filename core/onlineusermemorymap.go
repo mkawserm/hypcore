@@ -77,3 +77,15 @@ func (o *OnlineUserMemoryMap) GetIdList(uid string) []int {
 		return make([]int, 0)
 	}
 }
+
+func (o *OnlineUserMemoryMap) GetUIDFromSID(sid int) string {
+	o.UserMapLock.RLock()
+	defer o.UserMapLock.RUnlock()
+
+	val, ok := o.SocketIDToUserMap[sid]
+	if ok {
+		return val
+	} else {
+		return ""
+	}
+}
