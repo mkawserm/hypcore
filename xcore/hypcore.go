@@ -9,6 +9,7 @@ import (
 	"github.com/mkawserm/hypcore/views"
 	"github.com/mkawserm/hypcore/xdb"
 	"net/http"
+	"runtime"
 	"sync"
 	"syscall"
 )
@@ -24,10 +25,6 @@ type HypCoreConfig struct {
 	EventQueueSize int
 	WaitingTime    int
 
-	Auth                core.AuthInterface
-	ServeWS             core.ServeWSInterface
-	OnlineUserDataStore core.OnlineUserDataStoreInterface
-
 	EnableTLS bool
 	CertFile  string
 	KeyFile   string
@@ -37,6 +34,11 @@ type HypCoreConfig struct {
 	EnableWebSocketPath bool
 
 	DbPath string
+
+	Auth                core.AuthInterface
+	ServeWS             core.ServeWSInterface
+	OnlineUserDataStore core.OnlineUserDataStoreInterface
+	StorageEngine       core.StorageInterface
 }
 
 func init() {
@@ -75,7 +77,8 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		ServeWS:             hc.ServeWS,
 		OnlineUserDataStore: hc.OnlineUserDataStore,
 
-		StorageEngine: &xdb.StorageEngine{DbPath: hc.DbPath},
+		StorageEngine: hc.StorageEngine,
+		DbPath:        hc.DbPath,
 
 		WebSocketUpgradePath: []byte("/ws"),
 		GraphQLPath:          []byte("/graphql"),
@@ -108,6 +111,17 @@ func (h *HypCore) ReconfigurePath(webSocketUpgradePath []byte, graphQLPath []byt
 }
 
 func (h *HypCore) Setup() {
+	if h.context.StorageEngine == nil {
+		h.context.StorageEngine = &xdb.StorageEngine{}
+	}
+
+	if h.context.StorageEngine != nil {
+		h.context.StorageEngine.Open(h.context.DbPath)
+		runtime.SetFinalizer(h, func(h *HypCore) {
+			h.context.StorageEngine.Close()
+		})
+	}
+
 	h.AddGraphQLQueryField("isLive", &graphql.Field{
 		Type:        graphql.Boolean,
 		Resolve:     func(p graphql.ResolveParams) (interface{}, error) { return h.context.GetIsLive(), nil },

@@ -5,7 +5,6 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
-	"github.com/mkawserm/hypcore/xdb"
 	"net"
 	"net/http"
 	"sync"
@@ -42,7 +41,8 @@ type HContext struct {
 	RouteList      []*Route              // read only while running the server
 
 	KeyValueStore map[string]string
-	StorageEngine *xdb.StorageEngine
+	StorageEngine StorageInterface
+	DbPath        string
 
 	//GraphQL related Objects
 	//GraphQLQuery *graphql.Object
@@ -202,4 +202,28 @@ func (c *HContext) SetKeyValueStore(dataMap map[string]string) {
 
 func (c *HContext) TotalActiveWebSocketConnections() int {
 	return c.ConnectionEventPool.TotalActiveWebSocketConnections()
+}
+
+func (c *HContext) SaveToStorage(key []byte, value []byte) bool {
+	if c.StorageEngine == nil {
+		return false
+	} else {
+		return c.StorageEngine.Set(key, value)
+	}
+}
+
+func (c *HContext) GetFromStorage(key []byte) ([]byte, bool) {
+	if c.StorageEngine == nil {
+		return []byte(""), false
+	} else {
+		return c.StorageEngine.Get(key)
+	}
+}
+
+func (c *HContext) DeleteFromStorage(key []byte) bool {
+	if c.StorageEngine == nil {
+		return false
+	} else {
+		return c.StorageEngine.Delete(key)
+	}
 }
