@@ -11,7 +11,7 @@ type StorageEngine struct {
 	db *badger.DB
 }
 
-func (se *StorageEngine) Setup() bool {
+func (se *StorageEngine) Open() bool {
 	var err error
 	se.db, err = badger.Open(badger.DefaultOptions(se.DbPath))
 
