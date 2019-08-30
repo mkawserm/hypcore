@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/logrusorgru/aurora"
+	"github.com/mkawserm/hypcore/app"
 	"github.com/mkawserm/hypcore/xcore"
 	"github.com/mkawserm/hypcore/z"
 	"github.com/spf13/cobra"
@@ -28,9 +29,25 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var runServerCmd = &cobra.Command{
+	Use:   "runserver",
+	Short: "Run the main server",
+	Run: func(cmd *cobra.Command, args []string) {
+
+	},
+}
+
+var checkCmd = &cobra.Command{
+	Use:   "check",
+	Short: "Check config file",
+	Run: func(cmd *cobra.Command, args []string) {
+		app.CheckConfigFile("")
+	},
+}
+
 var authorsCmd = &cobra.Command{
 	Use:   "authors",
-	Short: "Print the authors Hyper Core",
+	Short: "Print the authors of Hyper Core",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(aurora.Green(xcore.Authors))
 	},
@@ -76,6 +93,8 @@ func Setup() {
 	hypCoreRootCmd.AddCommand(shellCmd)
 	hypCoreRootCmd.AddCommand(authorsCmd)
 	hypCoreRootCmd.AddCommand(versionCmd)
+	hypCoreRootCmd.AddCommand(runServerCmd)
+	hypCoreRootCmd.AddCommand(checkCmd)
 }
 
 func Execute() {
