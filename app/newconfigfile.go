@@ -7,19 +7,24 @@ import (
 )
 
 var ConfigFilePathFirst = "/home/" + strings.ToLower(z.ExeName())
+var ConfigFileNameWithoutExt = strings.ToLower(z.ExeName())
 
-func ConfigFilePathSecond() string {
-	return "/etc/" + strings.ToLower(z.ExeName())
-}
+//func ConfigFilePathSecond() string {
+//	return "/etc/" + strings.ToLower(z.ExeName())
+//}
 
 func ConfigFileName() string {
 	return strings.ToLower(z.ExeName()) + ".toml"
 }
 
-func NewConfigFile(configFilePath string) *viper.Viper {
+func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
+	if configFileName != "" {
+		ConfigFileNameWithoutExt = configFileName
+	}
+
 	v := viper.New()
 	v.SetConfigType("toml")
-	v.SetConfigName(strings.ToLower(z.ExeName()))
+	v.SetConfigName(ConfigFileNameWithoutExt)
 	if configFilePath != "" {
 		ConfigFilePathFirst = configFilePath
 	}

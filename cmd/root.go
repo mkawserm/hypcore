@@ -41,7 +41,7 @@ var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check config file",
 	Run: func(cmd *cobra.Command, args []string) {
-		app.CheckConfigFile("")
+		app.CheckConfigFile("", "")
 	},
 }
 
