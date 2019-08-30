@@ -18,6 +18,13 @@ func ConfigFileName() string {
 }
 
 func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
+	if configFilePath != "" {
+		ConfigFilePathFirst = configFilePath
+		if ConfigFilePathFirst[len(ConfigFilePathFirst)-1:] == "/" {
+			ConfigFilePathFirst = ConfigFilePathFirst[0 : len(ConfigFilePathFirst)-1]
+		}
+	}
+
 	if configFileName != "" {
 		ConfigFileNameWithoutExt = configFileName
 	}
@@ -25,9 +32,6 @@ func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
 	v := viper.New()
 	v.SetConfigType("toml")
 	v.SetConfigName(ConfigFileNameWithoutExt)
-	if configFilePath != "" {
-		ConfigFilePathFirst = configFilePath
-	}
 	v.AddConfigPath(ConfigFilePathFirst)
 
 	//v.AddConfigPath("/etc/"+strings.ToLower(z.ExeName()))
