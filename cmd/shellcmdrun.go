@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func ShellCmd(cmd *cobra.Command, args []string) {
+func ShellCmdRun(cmd *cobra.Command, args []string) {
 	reader := bufio.NewReader(os.Stdin)
 	input_counter := 0
 	for {

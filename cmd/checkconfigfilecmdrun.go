@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func CheckConfigFileCmd(cmd *cobra.Command, args []string) {
+func CheckConfigFileCmdRun(cmd *cobra.Command, args []string) {
 	filePath := ""
 	fileNameWithoutExt := ""
 

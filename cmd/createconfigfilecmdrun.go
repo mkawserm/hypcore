@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func CreateConfigFileCmd(cmd *cobra.Command, args []string) {
+func CreateConfigFileCmdRun(cmd *cobra.Command, args []string) {
 	filePath := ""
 	fileNameWithoutExt := ""
 

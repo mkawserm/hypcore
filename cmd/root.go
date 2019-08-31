@@ -9,88 +9,103 @@ import (
 	"os"
 )
 
-var hypCoreRootCmd = &cobra.Command{
-	Use:   z.ExeName(),
-	Short: xcore.AppNameLong + " micro service",
-	Long:  xcore.AppDescription,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(cmd.UsageString())
-	},
+type HyperCoreCMD struct {
+	HyperCoreRootCMD *cobra.Command
+	VersionCMD       *cobra.Command
+	ServerCMD        *cobra.Command
+
+	CheckConfigFileCMD  *cobra.Command
+	CreateConfigFileCMD *cobra.Command
+	ConfigFileCMD       *cobra.Command
+
+	AuthorsCMD *cobra.Command
+	ShellCMD   *cobra.Command
 }
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the version number of Hyper Core",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(aurora.Green(xcore.Version))
-	},
-}
+func (hcc *HyperCoreCMD) LoadDefaults() {
+	hcc.HyperCoreRootCMD = &cobra.Command{
+		Use:   z.ExeName(),
+		Short: xcore.AppNameLong + " micro service",
+		Long:  xcore.AppDescription,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(cmd.UsageString())
+		},
+	}
 
-var runServerCmd = &cobra.Command{
-	Use:   "runserver",
-	Short: "Run the main server",
-	Run: func(cmd *cobra.Command, args []string) {
+	hcc.VersionCMD = &cobra.Command{
+		Use:   "version",
+		Short: "Print the version number of Hyper Core",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(aurora.Green(xcore.Version))
+		},
+	}
 
-	},
-}
+	hcc.ServerCMD = &cobra.Command{
+		Use:   "server",
+		Short: "Run the main server",
+		Long:  "Run the main HypCore server",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(cmd.UsageString())
+		},
+	}
 
-var checkConfigFileCmd = &cobra.Command{
-	Use:   "check",
-	Short: "Check config file",
-	Run:   CheckConfigFileCmd,
-}
-
-var createConfigFileCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create config file",
-	Run:   CreateConfigFileCmd,
-}
-
-var configFileCmd = &cobra.Command{
-	Use:   "config",
-	Short: "create or check configuration file",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(cmd.UsageString())
-	},
-}
-
-var authorsCmd = &cobra.Command{
-	Use:   "authors",
-	Short: "Print the authors of Hyper Core",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(aurora.Green(xcore.Authors))
-	},
-}
-
-var shellCmd = &cobra.Command{
-	Use:   "shell",
-	Short: "Hyper Core shell",
-	Run:   ShellCmd,
-}
-
-func Setup() {
-	hypCoreRootCmd.AddCommand(shellCmd)
-	hypCoreRootCmd.AddCommand(authorsCmd)
-	hypCoreRootCmd.AddCommand(versionCmd)
-	hypCoreRootCmd.AddCommand(runServerCmd)
-
-	checkConfigFileCmd.Flags().String(
+	hcc.CheckConfigFileCMD = &cobra.Command{
+		Use:   "check",
+		Short: "Check config file",
+		Run:   CheckConfigFileCmdRun,
+	}
+	hcc.CheckConfigFileCMD.Flags().String(
 		"file",
 		"",
 		"Absolute file path to check configuration file")
 
-	createConfigFileCmd.Flags().String(
+	hcc.CreateConfigFileCMD = &cobra.Command{
+		Use:   "create",
+		Short: "Create config file",
+		Run:   CreateConfigFileCmdRun,
+	}
+	hcc.CreateConfigFileCMD.Flags().String(
 		"file",
 		"",
 		"Absolute file path to create configuration file")
 
-	configFileCmd.AddCommand(checkConfigFileCmd)
-	configFileCmd.AddCommand(createConfigFileCmd)
-	hypCoreRootCmd.AddCommand(configFileCmd)
+	hcc.ConfigFileCMD = &cobra.Command{
+		Use:   "config",
+		Short: "create or check configuration file",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(cmd.UsageString())
+		},
+	}
+
+	hcc.ConfigFileCMD.AddCommand(hcc.CheckConfigFileCMD)
+	hcc.ConfigFileCMD.AddCommand(hcc.CreateConfigFileCMD)
+
+	hcc.AuthorsCMD = &cobra.Command{
+		Use:   "authors",
+		Short: "Print the authors of Hyper Core",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(aurora.Green(xcore.Authors))
+		},
+	}
+
+	hcc.ShellCMD = &cobra.Command{
+		Use:   "shell",
+		Short: "Hyper Core shell",
+		Run:   ShellCmdRun,
+	}
+
 }
 
-func Execute() {
-	if err := hypCoreRootCmd.Execute(); err != nil {
+func (hcc *HyperCoreCMD) Setup() {
+	hcc.HyperCoreRootCMD.AddCommand(hcc.ShellCMD)
+	hcc.HyperCoreRootCMD.AddCommand(hcc.AuthorsCMD)
+	hcc.HyperCoreRootCMD.AddCommand(hcc.VersionCMD)
+	hcc.HyperCoreRootCMD.AddCommand(hcc.ServerCMD)
+	hcc.HyperCoreRootCMD.AddCommand(hcc.ConfigFileCMD)
+}
+
+func (hcc *HyperCoreCMD) Execute() {
+	if err := hcc.HyperCoreRootCMD.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
