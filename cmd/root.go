@@ -1,18 +1,22 @@
 package cmd
 
 import (
+	goFlag "flag"
 	"fmt"
 	"github.com/logrusorgru/aurora"
 	"github.com/mkawserm/hypcore/xcore"
 	"github.com/mkawserm/hypcore/z"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 	"os"
 )
 
 type HyperCoreCMD struct {
 	HyperCoreRootCMD *cobra.Command
 	VersionCMD       *cobra.Command
-	ServerCMD        *cobra.Command
+
+	RunServerCMD *cobra.Command
+	ServerCMD    *cobra.Command
 
 	CheckConfigFileCMD  *cobra.Command
 	CreateConfigFileCMD *cobra.Command
@@ -33,6 +37,10 @@ func (hcc *HyperCoreCMD) LoadDefaultsIfNil() {
 			Run: func(cmd *cobra.Command, args []string) {
 				fmt.Println(cmd.UsageString())
 			},
+			PersistentPreRun: func(cmd *cobra.Command, args []string) {
+				// For cobra + glog flags. Available to all sub commands.
+				goFlag.Parse()
+			},
 		}
 	}
 
@@ -47,6 +55,18 @@ func (hcc *HyperCoreCMD) LoadDefaultsIfNil() {
 	}
 
 	if hcc.ServerCMD == nil {
+
+		hcc.RunServerCMD = &cobra.Command{
+			Use:   "run",
+			Short: "Run the main server",
+			Run:   RunServerCmdRun,
+		}
+
+		hcc.RunServerCMD.Flags().String(
+			"config",
+			"",
+			"Absolute path of the configuration file")
+
 		hcc.ServerCMD = &cobra.Command{
 			Use:   "server",
 			Short: "The main server",
@@ -55,6 +75,8 @@ func (hcc *HyperCoreCMD) LoadDefaultsIfNil() {
 				fmt.Println(cmd.UsageString())
 			},
 		}
+
+		hcc.ServerCMD.AddCommand(hcc.RunServerCMD)
 	}
 
 	if hcc.ConfigFileCMD == nil {
@@ -116,6 +138,8 @@ func (hcc *HyperCoreCMD) Setup() {
 	hcc.HyperCoreRootCMD.AddCommand(hcc.VersionCMD)
 	hcc.HyperCoreRootCMD.AddCommand(hcc.ServerCMD)
 	hcc.HyperCoreRootCMD.AddCommand(hcc.ConfigFileCMD)
+
+	flag.CommandLine.AddGoFlagSet(goFlag.CommandLine)
 }
 
 func (hcc *HyperCoreCMD) Execute() {

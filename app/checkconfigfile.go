@@ -5,6 +5,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/logrusorgru/aurora"
 	"github.com/spf13/viper"
+	"os"
 )
 
 func CheckConfigFileSilent(configFilePath string, configFileName string) *viper.Viper {
@@ -73,6 +74,75 @@ func CheckConfigFile(configFilePath string,
 
 // Check if the configuration file is ok
 func IsConfigurationOk(v *viper.Viper, silent bool, logToGlog bool) bool {
+	var e error
 
-	return true
+	if v.IsSet("db.path") {
+		dbPath := v.GetString("db.path")
+		e = EnsureDir(dbPath)
+		if e != nil {
+			if silent == false {
+				if logToGlog {
+					glog.Errorln(e.Error())
+				} else {
+					fmt.Println(aurora.BrightRed(e.Error()))
+				}
+			}
+			return false
+		}
+	} else {
+		SpitError("db.path not found in the configuration", silent, logToGlog)
+		return false
+	}
+
+	if v.IsSet("server.tls") && v.GetBool("server.tls") {
+
+		if v.IsSet("server.certFile") {
+			_, e1 := os.Stat(v.GetString("server.certFile"))
+			if CheckAndSpit(e1, silent, logToGlog) {
+				return false
+			}
+		} else {
+			SpitError("server.certFile not found in the configuration", silent, logToGlog)
+			return false
+		}
+
+		if v.IsSet("server.keyFile") {
+			_, e1 := os.Stat(v.GetString("server.keyFile"))
+			if CheckAndSpit(e1, silent, logToGlog) {
+				return false
+			}
+		} else {
+			SpitError("server.keyFile not found in the configuration", silent, logToGlog)
+			return false
+		}
+
+	}
+
+	return IsConfigurationOkHook(v, silent, logToGlog)
+}
+
+func SpitError(message string, silent bool, logToGlog bool) {
+	if silent == false {
+		if logToGlog {
+			glog.Errorln(message)
+		} else {
+			fmt.Println(aurora.BrightRed(message))
+		}
+	}
+}
+
+func CheckAndSpit(e error, silent bool, logToGlog bool) bool {
+	if e != nil {
+		if silent == false {
+			if logToGlog {
+				glog.Errorln(e.Error())
+			} else {
+				fmt.Println(aurora.BrightRed(e.Error()))
+			}
+		}
+		// exit
+		return true
+	}
+	// don't exit
+	return false
 }
