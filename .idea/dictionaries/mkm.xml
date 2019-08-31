@@ -2,16 +2,22 @@
   <dictionary name="mkm">
     <words>
       <w>conntrack</w>
+      <w>debugf</w>
+      <w>errorf</w>
       <w>glog</w>
       <w>hypcore</w>
+      <w>infof</w>
       <w>infoln</w>
       <w>kawser</w>
       <w>mkawserm</w>
+      <w>mmap</w>
+      <w>mmapping</w>
       <w>munshi</w>
       <w>netfilter</w>
       <w>runserver</w>
       <w>sprintf</w>
       <w>textproto</w>
+      <w>warningf</w>
     </words>
   </dictionary>
 </component>

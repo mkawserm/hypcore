@@ -2,8 +2,61 @@ package xdb
 
 import (
 	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/options"
 	"github.com/golang/glog"
 )
+
+type badgerLogger struct {
+}
+
+func (bl *badgerLogger) Errorf(f string, v ...interface{}) {
+	glog.Errorf("ERROR: "+f+"\n", v...)
+}
+
+func (bl *badgerLogger) Warningf(f string, v ...interface{}) {
+	glog.Warningf("WARNING: "+f+"\n", v...)
+}
+
+func (bl *badgerLogger) Infof(f string, v ...interface{}) {
+	glog.Infof("INFO: "+f+"\n", v...)
+}
+
+func (bl *badgerLogger) Debugf(f string, v ...interface{}) {
+	glog.Infof("DEBUG: "+f+"\n", v...)
+}
+
+func StorageEngineOptions(path string) badger.Options {
+	return badger.Options{
+		Dir:                 path,
+		ValueDir:            path,
+		LevelOneSize:        256 << 20,
+		LevelSizeMultiplier: 10,
+		TableLoadingMode:    options.MemoryMap,
+		ValueLogLoadingMode: options.MemoryMap,
+		// table.MemoryMap to mmap() the tables.
+		// table.Nothing to not preload the tables.
+		MaxLevels:               7,
+		MaxTableSize:            64 << 20,
+		NumCompactors:           2, // Compactions can be expensive. Only run 2.
+		NumLevelZeroTables:      5,
+		NumLevelZeroTablesStall: 10,
+		NumMemtables:            5,
+		SyncWrites:              true,
+		NumVersionsToKeep:       1,
+		CompactL0OnClose:        true,
+		// Nothing to read/write value log using standard File I/O
+		// MemoryMap to mmap() the value log files
+		// (2^30 - 1)*2 when mmapping < 2^31 - 1, max int32.
+		// -1 so 2*ValueLogFileSize won't overflow on 32-bit systems.
+		ValueLogFileSize: 1<<30 - 1,
+
+		ValueLogMaxEntries: 1000000,
+		ValueThreshold:     32,
+		Truncate:           false,
+		Logger:             &badgerLogger{},
+		LogRotatesToFlush:  2,
+	}
+}
 
 type StorageEngine struct {
 	db        *badger.DB
@@ -14,7 +67,7 @@ func (se *StorageEngine) Open(dbPath string) bool {
 	se.gcChannel = make(chan bool, 1000)
 
 	var err error
-	se.db, err = badger.Open(badger.DefaultOptions(dbPath))
+	se.db, err = badger.Open(StorageEngineOptions(dbPath))
 
 	if err != nil {
 		glog.Errorln("Failed to open database '", dbPath, "'")
