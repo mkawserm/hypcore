@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"go/token"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
@@ -22,7 +23,13 @@ import (
 	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/lsp/tests"
 	"golang.org/x/tools/internal/span"
+	"golang.org/x/tools/internal/testenv"
 )
+
+func TestMain(m *testing.M) {
+	testenv.ExitIfSmallMachine()
+	os.Exit(m.Run())
+}
 
 func TestLSP(t *testing.T) {
 	packagestest.TestAll(t, testLSP)
@@ -58,7 +65,8 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 					protocol.QuickFix:              true,
 				},
 				source.Mod: {},
-				source.Sum: {}},
+				source.Sum: {},
+			},
 			hoverKind: synopsisDocumentation,
 		},
 		data: data,
@@ -99,7 +107,8 @@ func (r *runner) Diagnostics(t *testing.T, data tests.Diagnostics) {
 
 func (r *runner) Completion(t *testing.T, data tests.Completions, snippets tests.CompletionSnippets, items tests.CompletionItems) {
 	defer func() {
-		r.server.useDeepCompletions = false
+		r.server.disableDeepCompletion = true
+		r.server.disableFuzzyMatching = true
 		r.server.wantUnimportedCompletions = false
 		r.server.wantCompletionDocumentation = false
 	}()
@@ -112,7 +121,8 @@ func (r *runner) Completion(t *testing.T, data tests.Completions, snippets tests
 			want = append(want, *items[pos])
 		}
 
-		r.server.useDeepCompletions = strings.Contains(string(src.URI()), "deepcomplete")
+		r.server.disableDeepCompletion = !strings.Contains(string(src.URI()), "deepcomplete")
+		r.server.disableFuzzyMatching = !strings.Contains(string(src.URI()), "fuzzymatch")
 		r.server.wantUnimportedCompletions = strings.Contains(string(src.URI()), "unimported")
 
 		list := r.runCompletion(t, src)
@@ -142,7 +152,8 @@ func (r *runner) Completion(t *testing.T, data tests.Completions, snippets tests
 		r.server.usePlaceholders = usePlaceholders
 
 		for src, want := range snippets {
-			r.server.useDeepCompletions = strings.Contains(string(src.URI()), "deepcomplete")
+			r.server.disableDeepCompletion = !strings.Contains(string(src.URI()), "deepcomplete")
+			r.server.disableFuzzyMatching = !strings.Contains(string(src.URI()), "fuzzymatch")
 			r.server.wantUnimportedCompletions = strings.Contains(string(src.URI()), "unimported")
 
 			list := r.runCompletion(t, src)
@@ -252,6 +263,103 @@ func summarizeCompletionItems(i int, want []source.CompletionItem, got []protoco
 		fmt.Fprintf(msg, "  %v\n", d)
 	}
 	return msg.String()
+}
+
+func (r *runner) FoldingRange(t *testing.T, data tests.FoldingRanges) {
+	for _, spn := range data {
+		uri := spn.URI()
+		filename := uri.Filename()
+
+		ranges, err := r.server.FoldingRange(r.ctx, &protocol.FoldingRangeParams{
+			TextDocument: protocol.TextDocumentIdentifier{
+				URI: protocol.NewURI(uri),
+			},
+		})
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		f, err := getGoFile(r.ctx, r.server.session.ViewOf(uri), uri)
+		if err != nil {
+			t.Fatal(err)
+		}
+		m, err := getMapper(r.ctx, f)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Fold all ranges.
+		got, err := foldRanges(m, string(m.Content), ranges)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		want := string(r.data.Golden("foldingRange", spn.URI().Filename(), func() ([]byte, error) {
+			return []byte(got), nil
+		}))
+
+		if want != got {
+			t.Errorf("foldingRanges failed for %s, expected:\n%v\ngot:\n%v", filename, want, got)
+		}
+
+		// Filter by kind.
+		kinds := []protocol.FoldingRangeKind{protocol.Imports, protocol.Comment}
+		for _, kind := range kinds {
+			var kindOnly []protocol.FoldingRange
+			for _, fRng := range ranges {
+				if fRng.Kind == string(kind) {
+					kindOnly = append(kindOnly, fRng)
+				}
+			}
+
+			got, err := foldRanges(m, string(m.Content), kindOnly)
+			if err != nil {
+				t.Error(err)
+				continue
+			}
+			want := string(r.data.Golden("foldingRange-"+string(kind), spn.URI().Filename(), func() ([]byte, error) {
+				return []byte(got), nil
+			}))
+
+			if want != got {
+				t.Errorf("foldingRanges-%s failed for %s, expected:\n%v\ngot:\n%v", string(kind), filename, want, got)
+			}
+
+		}
+
+	}
+}
+
+func foldRanges(m *protocol.ColumnMapper, contents string, ranges []protocol.FoldingRange) (string, error) {
+	// TODO(suzmue): Allow folding ranges to intersect for these tests, do a folding by level,
+	// or per individual fold.
+	foldedText := "<>"
+	res := contents
+	// Apply the edits from the end of the file forward
+	// to preserve the offsets
+	for i := len(ranges) - 1; i >= 0; i-- {
+		fRange := ranges[i]
+		spn, err := m.RangeSpan(protocol.Range{
+			Start: protocol.Position{
+				Line:      fRange.StartLine,
+				Character: fRange.StartCharacter,
+			},
+			End: protocol.Position{
+				Line:      fRange.EndLine,
+				Character: fRange.EndCharacter,
+			},
+		})
+		if err != nil {
+			return "", err
+		}
+		start := spn.Start().Offset()
+		end := spn.End().Offset()
+
+		tmp := res[0:start] + foldedText
+		res = tmp + res[end:]
+	}
+	return res, nil
 }
 
 func (r *runner) Format(t *testing.T, data tests.Formats) {
@@ -543,6 +651,50 @@ func (r *runner) Rename(t *testing.T, data tests.Renames) {
 
 		if renamed != got {
 			t.Errorf("rename failed for %s, expected:\n%v\ngot:\n%v", newText, renamed, got)
+		}
+	}
+}
+
+func (r *runner) PrepareRename(t *testing.T, data tests.PrepareRenames) {
+	for src, want := range data {
+
+		sm, err := r.mapper(src.URI())
+		if err != nil {
+			t.Fatal(err)
+		}
+		loc, err := sm.Location(src)
+		if err != nil {
+			t.Fatalf("failed for %v: %v", src, err)
+		}
+
+		params := &protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: loc.URI},
+			Position:     loc.Range.Start,
+		}
+
+		rng, err := r.server.PrepareRename(context.Background(), params)
+		if err != nil {
+			t.Errorf("prepare rename failed for %v: got error: %v", src, err)
+			continue
+		}
+		if rng == nil {
+			if want.Text != "" { // expected an ident.
+				t.Errorf("prepare rename failed for %v: got nil", src)
+			}
+			continue
+		}
+
+		wantSpn, err := want.Range.Span()
+		if err != nil {
+			t.Fatalf("failed for %v: %v", src, err)
+		}
+		got, err := sm.RangeSpan(*rng)
+		if err != nil {
+			t.Fatalf("failed for %v: %v", src, err)
+		}
+
+		if got != wantSpn {
+			t.Errorf("prepare rename failed: incorrect range got %v want %v", got, wantSpn)
 		}
 	}
 }

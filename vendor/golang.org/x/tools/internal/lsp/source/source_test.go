@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
@@ -22,7 +23,13 @@ import (
 	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/lsp/tests"
 	"golang.org/x/tools/internal/span"
+	"golang.org/x/tools/internal/testenv"
 )
+
+func TestMain(m *testing.M) {
+	testenv.ExitIfSmallMachine()
+	os.Exit(m.Run())
+}
 
 func TestSource(t *testing.T) {
 	packagestest.TestAll(t, testSource)
@@ -89,14 +96,16 @@ func (r *runner) Completion(t *testing.T, data tests.Completions, snippets tests
 			t.Fatalf("failed for %v: %v", src, err)
 		}
 		deepComplete := strings.Contains(string(src.URI()), "deepcomplete")
+		fuzzyMatch := strings.Contains(string(src.URI()), "fuzzymatch")
 		unimported := strings.Contains(string(src.URI()), "unimported")
 		list, surrounding, err := source.Completion(ctx, r.view, f.(source.GoFile), protocol.Position{
 			Line:      float64(src.Start().Line() - 1),
 			Character: float64(src.Start().Column() - 1),
 		}, source.CompletionOptions{
-			DeepComplete:     deepComplete,
-			WantDocumentaton: true,
-			WantUnimported:   unimported,
+			WantDeepCompletion: deepComplete,
+			WantFuzzyMatching:  fuzzyMatch,
+			WantDocumentaton:   true,
+			WantUnimported:     unimported,
 		})
 		if err != nil {
 			t.Fatalf("failed for %v: %v", src, err)
@@ -121,7 +130,7 @@ func (r *runner) Completion(t *testing.T, data tests.Completions, snippets tests
 			// If deep completion is enabled, we need to use the fuzzy matcher to match
 			// the code's behvaior.
 			if deepComplete {
-				if fuzzyMatcher != nil && fuzzyMatcher.Score(item.Label) <= 0 {
+				if fuzzyMatcher != nil && fuzzyMatcher.Score(item.Label) < 0 {
 					continue
 				}
 			} else {
@@ -143,11 +152,13 @@ func (r *runner) Completion(t *testing.T, data tests.Completions, snippets tests
 			if err != nil {
 				t.Fatalf("failed for %v: %v", src, err)
 			}
+
 			list, _, err := source.Completion(ctx, r.view, f.(source.GoFile), protocol.Position{
 				Line:      float64(src.Start().Line() - 1),
 				Character: float64(src.Start().Column() - 1),
 			}, source.CompletionOptions{
-				DeepComplete: strings.Contains(string(src.URI()), "deepcomplete"),
+				WantDeepCompletion: strings.Contains(string(src.URI()), "deepcomplete"),
+				WantFuzzyMatching:  strings.Contains(string(src.URI()), "fuzzymatch"),
 			})
 			if err != nil {
 				t.Fatalf("failed for %v: %v", src, err)
@@ -255,6 +266,89 @@ func summarizeCompletionItems(i int, want []source.CompletionItem, got []source.
 		fmt.Fprintf(msg, "  %v\n", d)
 	}
 	return msg.String()
+}
+
+func (r *runner) FoldingRange(t *testing.T, data tests.FoldingRanges) {
+	for _, spn := range data {
+		uri := spn.URI()
+		filename := uri.Filename()
+
+		f, err := r.view.GetFile(r.ctx, uri)
+		if err != nil {
+			t.Fatalf("failed for %v: %v", spn, err)
+		}
+
+		ranges, err := source.FoldingRange(r.ctx, r.view, f.(source.GoFile))
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		data, _, err := f.Handle(r.ctx).Read(r.ctx)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		// Fold all ranges.
+		got, err := foldRanges(string(data), ranges)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		want := string(r.data.Golden("foldingRange", spn.URI().Filename(), func() ([]byte, error) {
+			return []byte(got), nil
+		}))
+
+		if want != got {
+			t.Errorf("foldingRanges failed for %s, expected:\n%v\ngot:\n%v", filename, want, got)
+		}
+
+		// Filter by kind.
+		kinds := []protocol.FoldingRangeKind{protocol.Imports, protocol.Comment}
+		for _, kind := range kinds {
+			var kindOnly []source.FoldingRangeInfo
+			for _, fRng := range ranges {
+				if fRng.Kind == kind {
+					kindOnly = append(kindOnly, fRng)
+				}
+			}
+
+			got, err := foldRanges(string(data), kindOnly)
+			if err != nil {
+				t.Error(err)
+				continue
+			}
+			want := string(r.data.Golden("foldingRange-"+string(kind), spn.URI().Filename(), func() ([]byte, error) {
+				return []byte(got), nil
+			}))
+
+			if want != got {
+				t.Errorf("foldingRanges-%s failed for %s, expected:\n%v\ngot:\n%v", string(kind), filename, want, got)
+			}
+
+		}
+
+	}
+}
+
+func foldRanges(contents string, ranges []source.FoldingRangeInfo) (string, error) {
+	// TODO(suzmue): Allow folding ranges to intersect for these tests.
+	foldedText := "<>"
+	res := contents
+	// Apply the folds from the end of the file forward
+	// to preserve the offsets.
+	for i := len(ranges) - 1; i >= 0; i-- {
+		fRange := ranges[i]
+		spn, err := fRange.Range.Span()
+		if err != nil {
+			return "", err
+		}
+		start := spn.Start().Offset()
+		end := spn.End().Offset()
+
+		tmp := res[0:start] + foldedText
+		res = tmp + res[end:]
+	}
+	return res, nil
 }
 
 func (r *runner) Format(t *testing.T, data tests.Formats) {
@@ -549,6 +643,53 @@ func applyEdits(contents string, edits []diff.TextEdit) string {
 		res = tmp + res[end:]
 	}
 	return res
+}
+
+func (r *runner) PrepareRename(t *testing.T, data tests.PrepareRenames) {
+	ctx := context.Background()
+	for src, want := range data {
+		f, err := r.view.GetFile(ctx, src.URI())
+		if err != nil {
+			t.Fatal(err)
+		}
+		srcRng, err := spanToRange(r.data, src)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Find the identifier at the position.
+		item, err := source.PrepareRename(ctx, r.view, f.(source.GoFile), srcRng.Start)
+		if err != nil {
+			if want.Text != "" { // expected an ident.
+				t.Errorf("prepare rename failed for %v: got error: %v", src, err)
+			}
+			continue
+		}
+		if item == nil {
+			if want.Text != "" {
+				t.Errorf("prepare rename failed for %v: got nil", src)
+			}
+			continue
+		}
+
+		if want.Text == "" && item != nil {
+			t.Errorf("prepare rename failed for %v: expected nil, got %v", src, item)
+			continue
+		}
+		gotSpn, err := item.Range.Span()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		wantSpn, err := want.Range.Span()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if gotSpn != wantSpn {
+			t.Errorf("prepare rename failed: incorrect range got %v want %v", item.Range, want.Range)
+		}
+	}
 }
 
 func (r *runner) Symbol(t *testing.T, data tests.Symbols) {

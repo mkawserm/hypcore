@@ -80,7 +80,8 @@ type Server struct {
 	// TODO(rstambler): Separate these into their own struct?
 	usePlaceholders               bool
 	hoverKind                     hoverKind
-	useDeepCompletions            bool
+	disableDeepCompletion         bool
+	disableFuzzyMatching          bool
 	watchFileChanges              bool
 	wantCompletionDocumentation   bool
 	wantUnimportedCompletions     bool
@@ -260,16 +261,17 @@ func (s *Server) Declaration(context.Context, *protocol.TextDocumentPositionPara
 	return nil, notImplemented("Declaration")
 }
 
-func (s *Server) FoldingRange(context.Context, *protocol.FoldingRangeParams) ([]protocol.FoldingRange, error) {
-	return nil, notImplemented("FoldingRange")
+func (s *Server) FoldingRange(ctx context.Context, params *protocol.FoldingRangeParams) ([]protocol.FoldingRange, error) {
+	return s.foldingRange(ctx, params)
 }
 
 func (s *Server) LogTraceNotification(context.Context, *protocol.LogTraceParams) error {
 	return notImplemented("LogtraceNotification")
 }
 
-func (s *Server) PrepareRename(context.Context, *protocol.TextDocumentPositionParams) (*protocol.Range, error) {
-	return nil, notImplemented("PrepareRename")
+func (s *Server) PrepareRename(ctx context.Context, params *protocol.TextDocumentPositionParams) (*protocol.Range, error) {
+	// TODO(suzmue): support sending placeholder text.
+	return s.prepareRename(ctx, params)
 }
 
 func (s *Server) SetTraceNotification(context.Context, *protocol.SetTraceParams) error {

@@ -161,7 +161,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "c7b8b68b14567162c6602a7c5659ee0f26417c18"
+  revision = "1e83adbbebd0f5dc971915fd7e5db032c3d2b731"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -173,7 +173,7 @@
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
-  revision = "f4d8977246093ee4389026a1f5e51666d7371b54"
+  revision = "573d9926052aeaeb5fbebcd3cf10d994c9c6d4f5"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"

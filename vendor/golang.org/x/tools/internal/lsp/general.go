@@ -90,6 +90,14 @@ func (s *Server) initialize(ctx context.Context, params *protocol.InitializePara
 	} else {
 		codeActionProvider = true
 	}
+	var renameOpts interface{}
+	if params.Capabilities.TextDocument.Rename.PrepareSupport {
+		renameOpts = &protocol.RenameOptions{
+			PrepareProvider: true,
+		}
+	} else {
+		renameOpts = true
+	}
 	return &protocol.InitializeResult{
 		Capabilities: protocol.ServerCapabilities{
 			CodeActionProvider: codeActionProvider,
@@ -99,11 +107,12 @@ func (s *Server) initialize(ctx context.Context, params *protocol.InitializePara
 			DefinitionProvider:         true,
 			DocumentFormattingProvider: true,
 			DocumentSymbolProvider:     true,
+			FoldingRangeProvider:       true,
 			HoverProvider:              true,
 			DocumentHighlightProvider:  true,
 			DocumentLinkProvider:       &protocol.DocumentLinkOptions{},
 			ReferencesProvider:         true,
-			RenameProvider:             true,
+			RenameProvider:             renameOpts,
 			SignatureHelpProvider: &protocol.SignatureHelpOptions{
 				TriggerCharacters: []string{"(", ","},
 			},
@@ -303,10 +312,8 @@ func (s *Server) processConfig(ctx context.Context, view source.View, config int
 		}
 	}
 
-	// Check if deep completions are enabled.
-	if useDeepCompletions, ok := c["useDeepCompletions"].(bool); ok {
-		s.useDeepCompletions = useDeepCompletions
-	}
+	s.disableDeepCompletion, _ = c["disableDeepCompletion"].(bool)
+	s.disableFuzzyMatching, _ = c["disableFuzzyMatching"].(bool)
 
 	// Check if want unimported package completions.
 	if wantUnimportedCompletions, ok := c["wantUnimportedCompletions"].(bool); ok {
