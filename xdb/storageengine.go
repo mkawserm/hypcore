@@ -6,10 +6,13 @@ import (
 )
 
 type StorageEngine struct {
-	db *badger.DB
+	db        *badger.DB
+	gcChannel chan bool
 }
 
 func (se *StorageEngine) Open(dbPath string) bool {
+	se.gcChannel = make(chan bool, 1000)
+
 	var err error
 	se.db, err = badger.Open(badger.DefaultOptions(dbPath))
 
@@ -17,6 +20,15 @@ func (se *StorageEngine) Open(dbPath string) bool {
 		glog.Errorln("Failed to open database '", dbPath, "'")
 		return false
 	}
+
+	go func() {
+		select {
+		case msg := <-se.gcChannel:
+			if msg {
+				se.runGc()
+			}
+		}
+	}()
 
 	return true
 }
@@ -66,9 +78,28 @@ func (se *StorageEngine) Delete(key []byte) bool {
 	})
 
 	if err == nil {
+		se.gcChannel <- true
 		return true
 	} else {
 		glog.Errorln("Failed to delete key:", key)
 		return false
 	}
+}
+
+func (se *StorageEngine) IsExists(key []byte) bool {
+	_, b := se.Get(key)
+	return b
+}
+
+func (se *StorageEngine) runGc() {
+	_ = se.db.RunValueLogGC(0.7)
+	//ticker := time.NewTicker(5 * time.Minute)
+	//defer ticker.Stop()
+	//for range ticker.C {
+	//again:
+	//	err := se.db.RunValueLogGC(0.7)
+	//	if err == nil {
+	//		goto again
+	//	}
+	//}
 }

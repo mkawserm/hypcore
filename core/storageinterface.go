@@ -6,4 +6,6 @@ type StorageInterface interface {
 	Set(key []byte, value []byte) bool
 	Get(key []byte) ([]byte, bool)
 	Delete(key []byte) bool
+
+	IsExists(key []byte) bool
 }
