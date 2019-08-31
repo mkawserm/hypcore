@@ -7,7 +7,7 @@ func main() {
 	xcore.AppName = "HypCore"
 
 	hcc := new(cmd.HyperCoreCMD)
-	hcc.LoadDefaults()
+	hcc.LoadDefaultsIfNil()
 	hcc.Setup()
 	hcc.Execute()
 }
