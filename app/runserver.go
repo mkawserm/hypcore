@@ -32,7 +32,7 @@ func RunServer(v *viper.Viper) {
 		[]byte(v.GetString("server.livePath")),
 	)
 
-	if HypCoreSetupHook(hypCore, false, true) {
+	if HypCoreSetupHook(v, hypCore, false, true) {
 		hypCore.Setup()
 		hypCore.Start()
 	}

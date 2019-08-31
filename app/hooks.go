@@ -26,6 +26,6 @@ var StorageEngineHook = func() core.StorageInterface {
 	return nil
 }
 
-var HypCoreSetupHook = func(hypCore *xcore.HypCore, silent bool, logToGlog bool) bool {
+var HypCoreSetupHook = func(v *viper.Viper, hypCore *xcore.HypCore, silent bool, logToGlog bool) bool {
 	return true
 }
