@@ -29,7 +29,7 @@ func httpJsonError(w http.ResponseWriter, body string, code int) {
 func httpBadRequest(w http.ResponseWriter, msg []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
-	output := fmt.Sprintf("{\"message\":\"%s\", \"error_code\":400}", msg)
+	output := fmt.Sprintf("{\"message\":\"%s\", \"error_code\":\"400\"}", msg)
 	w.Header().Set("Content-Length", strconv.Itoa(len(output)))
 
 	_, _ = w.Write([]byte(output))
@@ -38,7 +38,7 @@ func httpBadRequest(w http.ResponseWriter, msg []byte) {
 func httpNotFound(w http.ResponseWriter, msg []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	output := fmt.Sprintf("{\"message\":\"%s\", \"error_code\":404}", msg)
+	output := fmt.Sprintf("{\"message\":\"%s\", \"error_code\":\"404\"}", msg)
 	w.Header().Set("Content-Length", strconv.Itoa(len(output)))
 
 	_, _ = w.Write([]byte(output))
@@ -47,7 +47,7 @@ func httpNotFound(w http.ResponseWriter, msg []byte) {
 func httpMessage(w http.ResponseWriter, msg []byte, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	output := fmt.Sprintf("{\"message\":\"%s\", \"code\":%d}", msg, code)
+	output := fmt.Sprintf("{\"message\":\"%s\", \"code\":\"%d\"}", msg, code)
 
 	w.Header().Set("Content-Length", strconv.Itoa(len(output)))
 
