@@ -1,5 +1,5 @@
 # HypCore
-Hyper Core is a small reusable golang package to build micro services
+Hyper Core is a small reusable websocket and graphql focused golang package
 
 
 
