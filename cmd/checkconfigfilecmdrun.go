@@ -29,8 +29,8 @@ func CheckConfigFileCmdRun(cmd *cobra.Command, args []string) {
 			fileNameWithoutExt = app.ConfigFileNameWithoutExt
 		}
 
-		v := app.CheckConfigFile(filePath, fileNameWithoutExt)
-		if v != nil && app.IsConfigurationOk(v, false) {
+		v := app.CheckConfigFile(filePath, fileNameWithoutExt, false, false)
+		if v != nil && app.IsConfigurationOk(v, false, false) {
 			fmt.Println(aurora.BrightGreen("Configuration file Ok"))
 			return
 		} else {
