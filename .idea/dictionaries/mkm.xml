@@ -11,6 +11,7 @@
       <w>netfilter</w>
       <w>runserver</w>
       <w>sprintf</w>
+      <w>textproto</w>
     </words>
   </dictionary>
 </component>

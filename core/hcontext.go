@@ -97,6 +97,10 @@ func (c *HContext) HasAuth() bool {
 	return c.Auth != nil
 }
 
+func (c *HContext) HasWSServer() bool {
+	return c.ServeWS != nil
+}
+
 //func (c *HContext) SetWebSocketUID(webSocketAuth interfaces.AuthInterface)  {
 //	c.AuthInterface = webSocketAuth
 //}
@@ -226,4 +230,16 @@ func (c *HContext) DeleteFromStorage(key []byte) bool {
 	} else {
 		return c.StorageEngine.Delete(key)
 	}
+}
+
+func (c *HContext) IsExistsInStorage(key []byte) bool {
+	if c.StorageEngine == nil {
+		return false
+	} else {
+		return c.StorageEngine.IsExists(key)
+	}
+}
+
+func (c *HContext) IsStorageEngineReady() bool {
+	return c.StorageEngine != nil
 }
