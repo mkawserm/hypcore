@@ -34,6 +34,7 @@ type HContext struct {
 	AuthBearer     string // read only
 	AuthPublicKey  string
 	AuthPrivateKey string
+	AuthAlgorithm  string
 
 	OnlineUserDataStore OnlineUserDataStoreInterface // read only
 

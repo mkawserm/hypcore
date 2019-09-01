@@ -29,11 +29,18 @@ type HypCoreConfig struct {
 	CertFile  string
 	KeyFile   string
 
+	EnableAuth bool
+
 	EnableLivePath      bool
 	EnableGraphQLPath   bool
 	EnableWebSocketPath bool
 
 	DbPath string
+
+	AuthBearer     string
+	AuthPublicKey  string
+	AuthPrivateKey string
+	AuthAlgorithm  string
 
 	Auth                core2.AuthInterface
 	ServeWS             core2.ServeWSInterface
@@ -54,6 +61,22 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 	} else if hc.Auth == nil && hc.OnlineUserDataStore != nil {
 		glog.Fatal("OnlineUserDataStore found but no Auth found. Please configure Auth.")
 		return nil
+	} else if hc.Auth != nil && hc.OnlineUserDataStore != nil {
+		if hc.AuthBearer == "" {
+			glog.Fatal("AuthBearer is required but not provided")
+		}
+
+		if hc.AuthAlgorithm == "" {
+			glog.Fatal("AuthAlgorithm is required but not provided")
+		}
+
+		if hc.AuthPublicKey == "" {
+			glog.Fatal("AuthPublicKey is required but not provided")
+		}
+
+		if hc.AuthPrivateKey == "" {
+			glog.Fatal("AuthPrivateKey is required but not provided")
+		}
 	}
 
 	hContext := &core2.HContext{
@@ -91,6 +114,11 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		EnableLivePath:      hc.EnableLivePath,
 		EnableGraphQLPath:   hc.EnableGraphQLPath,
 		EnableWebSocketPath: hc.EnableWebSocketPath,
+
+		AuthBearer:     hc.AuthBearer,
+		AuthPublicKey:  hc.AuthPublicKey,
+		AuthAlgorithm:  hc.AuthAlgorithm,
+		AuthPrivateKey: hc.AuthPrivateKey,
 	}
 
 	if hContext.ServeWS == nil {

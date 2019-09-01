@@ -90,7 +90,7 @@ func IsConfigurationOk(v *viper.Viper, silent bool, logToGlog bool) bool {
 			return false
 		}
 	} else {
-		SpitError("db.path not found in the configuration", silent, logToGlog)
+		SpitError("db.path key is missing in the configuration", silent, logToGlog)
 		return false
 	}
 
@@ -102,7 +102,7 @@ func IsConfigurationOk(v *viper.Viper, silent bool, logToGlog bool) bool {
 				return false
 			}
 		} else {
-			SpitError("server.certFile not found in the configuration", silent, logToGlog)
+			SpitError("server.certFile key is missing in the configuration", silent, logToGlog)
 			return false
 		}
 
@@ -112,7 +112,51 @@ func IsConfigurationOk(v *viper.Viper, silent bool, logToGlog bool) bool {
 				return false
 			}
 		} else {
-			SpitError("server.keyFile not found in the configuration", silent, logToGlog)
+			SpitError("server.keyFile key is missing in the configuration", silent, logToGlog)
+			return false
+		}
+
+	}
+
+	if v.IsSet("server.enableAuth") && v.GetBool("server.enableAuth") {
+
+		if v.IsSet("auth.bearer") {
+			if v.GetString("auth.bearer") == "" {
+				SpitError("auth.bearer can not be empty", silent, logToGlog)
+				return false
+			}
+		} else {
+			SpitError("auth.bearer key is missing in the configuration", silent, logToGlog)
+			return false
+		}
+
+		if v.IsSet("auth.algorithm") {
+			if v.GetString("auth.algorithm") == "" {
+				SpitError("auth.algorithm can not be empty", silent, logToGlog)
+				return false
+			}
+		} else {
+			SpitError("auth.algorithm key is missing in the configuration", silent, logToGlog)
+			return false
+		}
+
+		if v.IsSet("auth.publicKey") {
+			if v.GetString("auth.publicKey") == "" {
+				SpitError("auth.publicKey can not be empty", silent, logToGlog)
+				return false
+			}
+		} else {
+			SpitError("auth.publicKey key is missing in the configuration", silent, logToGlog)
+			return false
+		}
+
+		if v.IsSet("auth.privateKey") {
+			if v.GetString("auth.privateKey") == "" {
+				SpitError("auth.privateKey can not be empty", silent, logToGlog)
+				return false
+			}
+		} else {
+			SpitError("auth.privateKey key is missing in the configuration", silent, logToGlog)
 			return false
 		}
 
