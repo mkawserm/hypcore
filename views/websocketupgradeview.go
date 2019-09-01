@@ -51,7 +51,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				return
 
 			} else {
-				uid, ok = wsu.Context.Auth.GetUID([]byte(h))
+				uid, ok = wsu.Context.Auth.GetUID([]byte(h), wsu.Context.AuthBearer)
 			}
 
 			if ok {

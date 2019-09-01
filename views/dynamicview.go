@@ -25,7 +25,7 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 
 		} else {
-			uid, ok = dView.Context.Auth.GetUID([]byte(h))
+			uid, ok = dView.Context.Auth.GetUID([]byte(h), dView.Context.AuthBearer)
 		}
 
 		if ok {

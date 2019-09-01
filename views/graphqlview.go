@@ -29,7 +29,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 
 		} else {
-			uid, ok = gqlView.Context.Auth.GetUID([]byte(h))
+			uid, ok = gqlView.Context.Auth.GetUID([]byte(h), gqlView.Context.AuthBearer)
 		}
 
 		if ok {
