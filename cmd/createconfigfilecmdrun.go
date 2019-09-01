@@ -13,12 +13,14 @@ import (
 func CreateConfigFileCmdRun(cmd *cobra.Command, args []string) {
 	filePath := ""
 	fileNameWithoutExt := ""
+	fileNameWithExt := ""
 
 	var e error
 	file, err := cmd.Flags().GetString("file")
 	if err == nil {
 		if file != "" {
 			filePath, fileNameWithoutExt = path.Split(file)
+			fileNameWithExt = fileNameWithoutExt
 			if strings.ToLower(path.Ext(fileNameWithoutExt)) != ".toml" {
 				fmt.Println(aurora.BrightRed("Configuration file with .toml extension is allowed"))
 				fmt.Println(aurora.BrightRed(path.Ext(fileNameWithoutExt) + " extension is not allowed"))
@@ -29,12 +31,15 @@ func CreateConfigFileCmdRun(cmd *cobra.Command, args []string) {
 		} else {
 			filePath = app.ConfigFilePathFirst
 			fileNameWithoutExt = app.ConfigFileNameWithoutExt
+			fileNameWithExt = fileNameWithoutExt + ".toml"
 		}
 		e = app.EnsureDir(filePath)
 		if e != nil {
 			fmt.Println(aurora.BrightRed(e.Error()))
 			return
 		}
+
+		fmt.Println(aurora.BrightGreen("creating config file: " + filePath + "/" + fileNameWithExt))
 
 		v := app.NewConfigFile(filePath, fileNameWithoutExt)
 		_ = ioutil.WriteFile(filePath+"/"+fileNameWithoutExt+".toml", []byte(""), 0777)
