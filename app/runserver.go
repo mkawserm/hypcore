@@ -6,30 +6,36 @@ import (
 )
 
 func RunServer(v *viper.Viper) {
-	hypCore := xcore.NewHypCore(
-		&xcore.HypCoreConfig{
-			Host: v.GetString("server.host"),
-			Port: v.GetString("server.port"),
+	hcc := &xcore.HypCoreConfig{
+		Host: v.GetString("server.host"),
+		Port: v.GetString("server.port"),
 
-			EventQueueSize: v.GetInt("server.eventQueueSize"),
-			WaitingTime:    v.GetInt("server.waitingTime"),
+		EventQueueSize: v.GetInt("server.eventQueueSize"),
+		WaitingTime:    v.GetInt("server.waitingTime"),
 
-			EnableTLS: v.GetBool("server.tls"),
-			CertFile:  v.GetString("server.certFile"),
-			KeyFile:   v.GetString("server.keyFile"),
+		EnableTLS: v.GetBool("server.tls"),
+		CertFile:  v.GetString("server.certFile"),
+		KeyFile:   v.GetString("server.keyFile"),
 
-			EnableLivePath:      v.GetBool("server.enableLivePath"),
-			EnableGraphQLPath:   v.GetBool("server.enableGraphQLPath"),
-			EnableWebSocketPath: v.GetBool("server.enableWebSocketPath"),
+		EnableAuth:          v.GetBool("server.enableAuth"),
+		EnableLivePath:      v.GetBool("server.enableLivePath"),
+		EnableGraphQLPath:   v.GetBool("server.enableGraphQLPath"),
+		EnableWebSocketPath: v.GetBool("server.enableWebSocketPath"),
 
-			DbPath: v.GetString("db.path"),
+		DbPath: v.GetString("db.path"),
 
-			Auth:                AuthHook(),
-			ServeWS:             ServeWSHook(),
-			OnlineUserDataStore: OnlineUserDataStoreHook(),
-			StorageEngine:       StorageEngineHook(),
-		},
-	)
+		Auth:                AuthHook(),
+		ServeWS:             ServeWSHook(),
+		OnlineUserDataStore: OnlineUserDataStoreHook(),
+		StorageEngine:       StorageEngineHook(),
+
+		AuthBearer:     v.GetString("auth.bearer"),
+		AuthAlgorithm:  v.GetString("auth.algorithm"),
+		AuthPublicKey:  v.GetString("auth.publicKey"),
+		AuthPrivateKey: v.GetString("auth.privateKey"),
+	}
+
+	hypCore := xcore.NewHypCore(hcc)
 
 	hypCore.ReconfigurePath(
 		[]byte(v.GetString("server.webSocketPath")),

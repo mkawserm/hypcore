@@ -143,6 +143,10 @@ func (h *HypCore) Setup() {
 		h.context.StorageEngine = &xdb2.StorageEngine{}
 	}
 
+	if h.context.ServeWS == nil {
+		h.context.ServeWS = &core2.ServeWSGraphQL{}
+	}
+
 	if h.context.StorageEngine != nil {
 		h.context.StorageEngine.Open(h.context.DbPath)
 		runtime.SetFinalizer(h, func(h *HypCore) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
+	"github.com/mkawserm/hypcore/package/mcodes"
 )
 
 type ServeWSGraphQL struct {
@@ -33,9 +34,16 @@ func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, m
 	if len(res.Errors) > 0 {
 		glog.Errorln("ServeWS: failed to execute graphql operation, errors: %+v", res.Errors)
 
-		output := fmt.Sprintf("{\"message\":\"%s\", \"error_code\":\"%d\"}",
-			[]byte("Oops! GraphQL query execution error. Invalid query!!!"),
-			400)
+		messageFormat := `
+		{
+			"error": {
+						"message": "%s",
+						"code": "%s"
+					 }
+		}`
+
+		output := fmt.Sprintf(messageFormat, []byte("Oops! GraphQL query execution error. Invalid query!!!"),
+			mcodes.InvalidGraphQLQuery)
 		ctx.WriteMessage(connectionId, []byte(output))
 
 	} else {

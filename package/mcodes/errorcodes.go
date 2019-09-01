@@ -12,4 +12,6 @@ const WebSocketNoHostFound = "HCWSNHF400"
 const WebSocketNoUpgradeHeaderFound = "HCWSNUHF400"
 const WebSocketNoConnectionHeaderFound = "HCWSNCHF400"
 
+const InvalidGraphQLQuery = "HCIGQLQ400"
+
 const HttpNotFound = "HCHNF404"
