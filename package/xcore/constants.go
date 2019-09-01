@@ -5,5 +5,5 @@ var (
 	Version        = "1.0.0"
 	AppName        = "HypCore"
 	AppNameLong    = "Hyper Core"
-	AppDescription = "Hyper Core is a small reusable websocket and graphql focused golang package"
+	AppDescription = "Hyper Core is a small reusable high performance websocket and graphql focused golang package"
 )
