@@ -1,8 +1,8 @@
 package core
 
 import (
+	"github.com/golang/glog"
 	"golang.org/x/sys/unix"
-	"log"
 	"net"
 	"reflect"
 	"sync"
@@ -82,7 +82,7 @@ func (e *EventPool) AddConnection(conn net.Conn) error {
 
 	e.connectionMap[fd] = conn
 	if len(e.connectionMap)%100 == 0 {
-		log.Printf("Total number of connections: %v", len(e.connectionMap))
+		glog.Infof("Total number of connections: %v\n", len(e.connectionMap))
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func (e *EventPool) RemoveConnection(conn net.Conn) error {
 	delete(e.connectionMap, fd)
 
 	if len(e.connectionMap)%100 == 0 {
-		log.Printf("Total number of connections: %v", len(e.connectionMap))
+		glog.Infof("Total number of connections: %v\n", len(e.connectionMap))
 	}
 
 	return nil

@@ -33,7 +33,7 @@ func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, m
 	if len(res.Errors) > 0 {
 		glog.Errorln("ServeWS: failed to execute graphql operation, errors: %+v", res.Errors)
 
-		output := fmt.Sprintf("{\"message\":\"%s\", \"error_code\":%d}",
+		output := fmt.Sprintf("{\"message\":\"%s\", \"error_code\":\"%d\"}",
 			[]byte("Oops! GraphQL query execution error. Invalid query!!!"),
 			400)
 		ctx.WriteMessage(connectionId, []byte(output))
