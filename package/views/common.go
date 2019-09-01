@@ -53,3 +53,23 @@ func httpMessage(w http.ResponseWriter, msg []byte, code int) {
 
 	_, _ = w.Write([]byte(output))
 }
+
+func GraphQLErrorMessage(w http.ResponseWriter, msg []byte, error_code string, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+
+	messageFormat := `
+{
+	"error": {
+				"message": "%s",
+				"code": "%s"
+			 }
+}
+`
+
+	output := fmt.Sprintf(messageFormat, msg, error_code)
+
+	w.Header().Set("Content-Length", strconv.Itoa(len(output)))
+
+	_, _ = w.Write([]byte(output))
+}

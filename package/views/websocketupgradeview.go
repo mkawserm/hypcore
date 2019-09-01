@@ -4,6 +4,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/golang/glog"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
 )
 
@@ -16,27 +17,32 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	if r.URL.Path == string(wsu.Context.WebSocketUpgradePath) {
 
 		if r.Method != http.MethodGet {
-			httpBadRequest(w, []byte("Oops! WebSocket upgrade must be done using get request !!!"))
+			GraphQLErrorMessage(w, []byte("Oops! WebSocket upgrade must be done using get request !!!"),
+				mcodes.WebSocketUpgradeBadRequestMethod, 400)
 			return
 		}
 
 		if r.ProtoMajor < 1 || (r.ProtoMajor == 1 && r.ProtoMinor < 1) {
-			httpBadRequest(w, []byte("Oops! Bad protocol !!!"))
+			GraphQLErrorMessage(w, []byte("Oops! Bad protocol !!!"),
+				mcodes.WebSocketBadProtocol, 400)
 			return
 		}
 
 		if r.Host == "" {
-			httpBadRequest(w, []byte("Oops! No Host found !!!"))
+			GraphQLErrorMessage(w, []byte("Oops! No Host found !!!"),
+				mcodes.WebSocketNoHostFound, 400)
 			return
 		}
 
 		if u := httpGetHeader(r.Header, core2.HeaderUpgradeCanonical); u != "websocket" && !core2.StrEqualFold(u, "websocket") {
-			httpBadRequest(w, []byte("Oops! No Upgrade header found !!!"))
+			GraphQLErrorMessage(w, []byte("Oops! No Upgrade header found !!!"),
+				mcodes.WebSocketNoUpgradeHeaderFound, 400)
 			return
 		}
 
 		if c := httpGetHeader(r.Header, core2.HeaderConnectionCanonical); c != "Upgrade" && !core2.StrHasToken(c, "upgrade") {
-			httpBadRequest(w, []byte("Oops! No Connection header found !!!"))
+			GraphQLErrorMessage(w, []byte("Oops! No Connection header found !!!"),
+				mcodes.WebSocketNoConnectionHeaderFound, 400)
 			return
 		}
 
@@ -47,7 +53,8 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 
 			if h == "" {
-				httpBadRequest(w, []byte("Oops! No Authorization header found !!!"))
+				GraphQLErrorMessage(w, []byte("Oops! No Authorization header found !!!"),
+					mcodes.NoAuthorizationHeaderFound, 400)
 				return
 
 			} else {
@@ -56,7 +63,8 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 			if ok {
 				if uid == "" {
-					httpBadRequest(w, []byte("Oops! No UID found from AuthInterface !!!"))
+					GraphQLErrorMessage(w, []byte("Oops! No UID found from AuthInterface !!!"),
+						mcodes.NoUIDFromAuthInterface, 400)
 					return
 				}
 
@@ -77,7 +85,8 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				}
 
 			} else { // Failed to authorize. not ok
-				httpBadRequest(w, []byte("Oops! Invalid Authorization data !!!"))
+				GraphQLErrorMessage(w, []byte("Oops! Invalid Authorization data !!!"),
+					mcodes.InvalidAuthorizationData, 400)
 			}
 
 		} else { // No AuthInterface. So just upgrade connection
@@ -97,6 +106,6 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		} // End of No AuthInterface
 
 	} else { // r.URL.Path != "/ws"
-		httpNotFound(w, []byte("Oops!!!"))
+		GraphQLErrorMessage(w, []byte("Oops!!!"), mcodes.HttpNotFound, 404)
 	}
 }

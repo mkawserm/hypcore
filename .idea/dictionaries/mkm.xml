@@ -5,6 +5,19 @@
       <w>debugf</w>
       <w>errorf</w>
       <w>glog</w>
+      <w>hcftrrb</w>
+      <w>hchnf</w>
+      <w>hchs</w>
+      <w>hciad</w>
+      <w>hcirm</w>
+      <w>hcnahf</w>
+      <w>hcnf</w>
+      <w>hcnufai</w>
+      <w>hcwsbp</w>
+      <w>hcwsnchf</w>
+      <w>hcwsnhf</w>
+      <w>hcwsnuhf</w>
+      <w>hcwsubrm</w>
       <w>hypcore</w>
       <w>infof</w>
       <w>infoln</w>
@@ -14,6 +27,7 @@
       <w>mmapping</w>
       <w>munshi</w>
       <w>netfilter</w>
+      <w>nufai</w>
       <w>runserver</w>
       <w>sprintf</w>
       <w>textproto</w>

@@ -3,6 +3,7 @@ package views
 import (
 	"github.com/golang/glog"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
 	"regexp"
 )
@@ -21,7 +22,8 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 		if h == "" {
-			httpBadRequest(w, []byte("Oops! No Authorization header found !!!"))
+			GraphQLErrorMessage(w, []byte("Oops! No Authorization header found !!!"),
+				mcodes.NoAuthorizationHeaderFound, 400)
 			return
 
 		} else {
@@ -30,12 +32,14 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if ok {
 			if uid == "" {
-				httpBadRequest(w, []byte("Oops! No UID found from AuthInterface !!!"))
+				GraphQLErrorMessage(w, []byte("Oops! No UID found from AuthInterface !!!"),
+					mcodes.NoUIDFromAuthInterface, 400)
 				return
 			}
 
 		} else { // Failed to authorize. not ok
-			httpBadRequest(w, []byte("Oops! Invalid Authorization data !!!"))
+			GraphQLErrorMessage(w, []byte("Oops! Invalid Authorization data !!!"),
+				mcodes.InvalidAuthorizationData, 400)
 			return
 		}
 	}
@@ -61,5 +65,5 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("Dynamic route dispatch failed to find a route.")
 	glog.Errorln("Showing 404 Http Error")
 
-	httpNotFound(w, []byte("Oops!!!"))
+	GraphQLErrorMessage(w, []byte("Oops!!!"), mcodes.HttpNotFound, 404)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/mcodes"
 	"io/ioutil"
 	"net/http"
 )
@@ -25,7 +26,10 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 		if h == "" {
-			httpBadRequest(w, []byte("Oops! No Authorization header found !!!"))
+			GraphQLErrorMessage(w,
+				[]byte("Oops! No Authorization header found !!!"),
+				mcodes.NoAuthorizationHeaderFound, 400)
+
 			return
 
 		} else {
@@ -34,12 +38,15 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if ok {
 			if uid == "" {
-				httpBadRequest(w, []byte("Oops! No UID found from AuthInterface !!!"))
+				GraphQLErrorMessage(w,
+					[]byte("Oops! No UID found from AuthInterface !!!"),
+					mcodes.NoUIDFromAuthInterface, 400)
 				return
 			}
 
 		} else { // Failed to authorize. not ok
-			httpBadRequest(w, []byte("Oops! Invalid Authorization data !!!"))
+			GraphQLErrorMessage(w, []byte("Oops! Invalid Authorization data !!!"),
+				mcodes.InvalidAuthorizationData, 400)
 			return
 		}
 	}
@@ -54,13 +61,16 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("Middleware processing complete.")
 
 	if r.Method != http.MethodPost {
-		httpBadRequest(w, []byte("Oops! GraphQL query must be done using post request !!!"))
+		GraphQLErrorMessage(w,
+			[]byte("Oops! GraphQL query must be done using post request !!!"),
+			mcodes.InvalidRequestMethod, 400)
 		return
 	}
 
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		httpBadRequest(w, []byte("Oops! Failed to read request body !!!"))
+		GraphQLErrorMessage(w, []byte("Oops! Failed to read request body !!!"),
+			mcodes.FailedToReadRequestBody, 400)
 		return
 	}
 
