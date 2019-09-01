@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/mkawserm/hypcore/core"
-	"github.com/mkawserm/hypcore/xcore"
+	"github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/xcore"
 	"github.com/spf13/viper"
 )
 

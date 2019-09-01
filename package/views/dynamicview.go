@@ -2,13 +2,13 @@ package views
 
 import (
 	"github.com/golang/glog"
-	"github.com/mkawserm/hypcore/core"
+	core2 "github.com/mkawserm/hypcore/package/core"
 	"net/http"
 	"regexp"
 )
 
 type DynamicView struct {
-	Context *core.HContext
+	Context *core2.HContext
 }
 
 func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +19,7 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		uid := ""
 		ok := false
 
-		h := httpGetHeader(r.Header, core.HeaderAuthorizationCanonical)
+		h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 		if h == "" {
 			httpBadRequest(w, []byte("Oops! No Authorization header found !!!"))
 			return

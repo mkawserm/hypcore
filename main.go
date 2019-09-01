@@ -1,7 +1,7 @@
 package main
 
 import "github.com/mkawserm/hypcore/cmd"
-import "github.com/mkawserm/hypcore/xcore"
+import "github.com/mkawserm/hypcore/package/xcore"
 
 func main() {
 	xcore.AppName = "HypCore"

@@ -5,9 +5,9 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
-	"github.com/mkawserm/hypcore/core"
-	"github.com/mkawserm/hypcore/views"
-	"github.com/mkawserm/hypcore/xdb"
+	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/views"
+	xdb2 "github.com/mkawserm/hypcore/package/xdb"
 	"net/http"
 	"runtime"
 	"sync"
@@ -15,7 +15,7 @@ import (
 )
 
 type HypCore struct {
-	context *core.HContext
+	context *core2.HContext
 	ready   bool
 }
 
@@ -35,10 +35,10 @@ type HypCoreConfig struct {
 
 	DbPath string
 
-	Auth                core.AuthInterface
-	ServeWS             core.ServeWSInterface
-	OnlineUserDataStore core.OnlineUserDataStoreInterface
-	StorageEngine       core.StorageInterface
+	Auth                core2.AuthInterface
+	ServeWS             core2.ServeWSInterface
+	OnlineUserDataStore core2.OnlineUserDataStoreInterface
+	StorageEngine       core2.StorageInterface
 }
 
 func init() {
@@ -56,7 +56,7 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		return nil
 	}
 
-	hContext := &core.HContext{
+	hContext := &core2.HContext{
 		Host:           hc.Host,
 		Port:           hc.Port,
 		EventQueueSize: hc.EventQueueSize,
@@ -94,7 +94,7 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 	}
 
 	if hContext.ServeWS == nil {
-		hContext.ServeWS = &core.ServeWSGraphQL{}
+		hContext.ServeWS = &core2.ServeWSGraphQL{}
 	}
 
 	h := &HypCore{
@@ -112,7 +112,7 @@ func (h *HypCore) ReconfigurePath(webSocketUpgradePath []byte, graphQLPath []byt
 
 func (h *HypCore) Setup() {
 	if h.context.StorageEngine == nil {
-		h.context.StorageEngine = &xdb.StorageEngine{}
+		h.context.StorageEngine = &xdb2.StorageEngine{}
 	}
 
 	if h.context.StorageEngine != nil {
@@ -176,7 +176,7 @@ func (h *HypCore) Setup() {
 
 	var err error
 
-	h.context.ConnectionEventPool, err = core.MakeCustomEventPool(
+	h.context.ConnectionEventPool, err = core2.MakeCustomEventPool(
 		h.context.EventQueueSize,
 		h.context.WaitingTime)
 
@@ -230,7 +230,7 @@ func (h *HypCore) runMainEventLoop() {
 
 			if msg, _, err := wsutil.ReadClientData(conn); err != nil {
 				if h.context.HasAuth() {
-					h.context.RemoveUser(core.WebsocketFileDescriptor(conn))
+					h.context.RemoveUser(core2.WebsocketFileDescriptor(conn))
 				}
 
 				if err := h.context.RemoveConnection(conn); err != nil {
@@ -245,7 +245,7 @@ func (h *HypCore) runMainEventLoop() {
 
 				// Call Message Server to process the message
 				if h.context.ServeWS != nil {
-					h.context.ServeWS.ServeWS(h.context, core.WebsocketFileDescriptor(conn), msg)
+					h.context.ServeWS.ServeWS(h.context, core2.WebsocketFileDescriptor(conn), msg)
 				}
 			}
 		}
@@ -312,11 +312,11 @@ func (h *HypCore) HasAuth() bool {
 	return h.context.HasAuth()
 }
 
-func (h *HypCore) AddMiddleware(mi core.MiddlewareInterface) {
+func (h *HypCore) AddMiddleware(mi core2.MiddlewareInterface) {
 	h.context.AddMiddleware(mi)
 }
 
-func (h *HypCore) AddRoute(pattern string, httpHandlerObject core.ServeHTTPInterface) {
+func (h *HypCore) AddRoute(pattern string, httpHandlerObject core2.ServeHTTPInterface) {
 	h.context.AddRoute(pattern, httpHandlerObject)
 }
 

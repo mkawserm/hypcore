@@ -3,12 +3,12 @@ package views
 import (
 	"github.com/gobwas/ws"
 	"github.com/golang/glog"
-	"github.com/mkawserm/hypcore/core"
+	core2 "github.com/mkawserm/hypcore/package/core"
 	"net/http"
 )
 
 type WebSocketUpgradeView struct {
-	Context *core.HContext
+	Context *core2.HContext
 }
 
 func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -30,12 +30,12 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		if u := httpGetHeader(r.Header, core.HeaderUpgradeCanonical); u != "websocket" && !core.StrEqualFold(u, "websocket") {
+		if u := httpGetHeader(r.Header, core2.HeaderUpgradeCanonical); u != "websocket" && !core2.StrEqualFold(u, "websocket") {
 			httpBadRequest(w, []byte("Oops! No Upgrade header found !!!"))
 			return
 		}
 
-		if c := httpGetHeader(r.Header, core.HeaderConnectionCanonical); c != "Upgrade" && !core.StrHasToken(c, "upgrade") {
+		if c := httpGetHeader(r.Header, core2.HeaderConnectionCanonical); c != "Upgrade" && !core2.StrHasToken(c, "upgrade") {
 			httpBadRequest(w, []byte("Oops! No Connection header found !!!"))
 			return
 		}
@@ -44,7 +44,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			uid := ""
 			ok := false
 
-			h := httpGetHeader(r.Header, core.HeaderAuthorizationCanonical)
+			h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 
 			if h == "" {
 				httpBadRequest(w, []byte("Oops! No Authorization header found !!!"))
@@ -73,7 +73,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				} else {
 					//NOTE Only if has websocket auth
 					//connection added to the container now we'll map it to specific user based on authorization
-					wsu.Context.AddUser(uid, core.WebsocketFileDescriptor(conn))
+					wsu.Context.AddUser(uid, core2.WebsocketFileDescriptor(conn))
 				}
 
 			} else { // Failed to authorize. not ok

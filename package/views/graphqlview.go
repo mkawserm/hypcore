@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
-	"github.com/mkawserm/hypcore/core"
+	core2 "github.com/mkawserm/hypcore/package/core"
 	"io/ioutil"
 	"net/http"
 )
 
 type GraphQLView struct {
-	Context *core.HContext
+	Context *core2.HContext
 }
 
 func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +23,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if gqlView.Context.HasAuth() {
 		ok := false
 
-		h := httpGetHeader(r.Header, core.HeaderAuthorizationCanonical)
+		h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 		if h == "" {
 			httpBadRequest(w, []byte("Oops! No Authorization header found !!!"))
 			return

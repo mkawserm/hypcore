@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/mkawserm/hypcore/z"
+	"github.com/mkawserm/hypcore/package/z"
 	"github.com/spf13/viper"
 	"strings"
 )

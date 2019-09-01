@@ -1,12 +1,12 @@
 package views
 
 import (
-	"github.com/mkawserm/hypcore/core"
+	core2 "github.com/mkawserm/hypcore/package/core"
 	"net/http"
 )
 
 type LiveView struct {
-	Context *core.HContext
+	Context *core2.HContext
 }
 
 func (lView *LiveView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
