@@ -76,7 +76,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				}
 
 				if err := wsu.Context.AddConnection(conn); err != nil {
-					glog.Errorln("Failed to add connection %v", err)
+					glog.Errorf("Failed to add connection %v\n", err)
 					_ = conn.Close()
 				} else {
 					//NOTE Only if has websocket auth
@@ -99,7 +99,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			}
 
 			if err := wsu.Context.AddConnection(conn); err != nil {
-				glog.Errorln("Failed to add connection %v", err)
+				glog.Errorf("Failed to add connection %v\n", err)
 				_ = conn.Close()
 			}
 

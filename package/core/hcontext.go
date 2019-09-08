@@ -143,11 +143,11 @@ func (c *HContext) WriteMessage(connectionId int, message []byte) {
 	if ok {
 		err := wsutil.WriteServerText(conn, message)
 		if err != nil {
-			glog.Errorln("WriteMessage: Failed to write message for ID [%d]", connectionId)
-			glog.Errorln("WriteMessage: Error message [%s]", err)
+			glog.Errorf("WriteMessage: Failed to write message for ID [%d]\n", connectionId)
+			glog.Errorf("WriteMessage: Error message [%s]\n", err)
 		}
 	} else {
-		glog.Errorln("WriteMessage Failed to find user with ID [%d]", connectionId)
+		glog.Errorf("WriteMessage Failed to find user with ID [%d]\n", connectionId)
 	}
 }
 
@@ -156,11 +156,11 @@ func (c *HContext) WriteLowLevelMessage(connectionId int, opCode ws.OpCode, mess
 	if ok {
 		err := wsutil.WriteServerMessage(conn, opCode, message)
 		if err != nil {
-			glog.Errorln("WriteMessage: Failed to write message for ID [%d]", connectionId)
-			glog.Errorln("WriteMessage: Error message [%s]", err)
+			glog.Errorf("WriteMessage: Failed to write message for ID [%d]\n", connectionId)
+			glog.Errorf("WriteMessage: Error message [%s]\n", err)
 		}
 	} else {
-		glog.Errorln("WriteMessage: Failed to find user with ID [%d]", connectionId)
+		glog.Errorf("WriteMessage: Failed to find user with ID [%d]\n", connectionId)
 	}
 }
 

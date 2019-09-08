@@ -32,7 +32,7 @@ func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, m
 
 	res := graphql.Do(params)
 	if len(res.Errors) > 0 {
-		glog.Errorln("ServeWS: failed to execute graphql operation, errors: %+v", res.Errors)
+		glog.Errorf("ServeWS: failed to execute graphql operation, errors: %+v\n", res.Errors)
 
 		messageFormat := `
 		{
