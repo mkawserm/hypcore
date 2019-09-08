@@ -33,6 +33,7 @@
       <w>nufai</w>
       <w>runserver</w>
       <w>sprintf</w>
+      <w>sysfd</w>
       <w>textproto</w>
       <w>warningf</w>
     </words>
