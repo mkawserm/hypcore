@@ -5,6 +5,8 @@
       <w>debugf</w>
       <w>errorf</w>
       <w>glog</w>
+      <w>godeps</w>
+      <w>gopath</w>
       <w>hcftrrb</w>
       <w>hchnf</w>
       <w>hchs</w>
