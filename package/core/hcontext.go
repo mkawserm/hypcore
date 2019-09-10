@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/golang/glog"
@@ -247,4 +248,67 @@ func (c *HContext) IsExistsInStorage(key []byte) bool {
 
 func (c *HContext) IsStorageEngineReady() bool {
 	return c.StorageEngine != nil
+}
+
+func (c *HContext) AddObject(obj interface{}) bool {
+	if c.StorageEngine == nil {
+		return false
+	}
+
+	key := GetPk(obj)
+	if key == "" {
+		return false
+	} else {
+		data, err := json.Marshal(obj)
+		if err != nil {
+			return false
+		} else {
+			return c.StorageEngine.Set([]byte(key), data)
+		}
+	}
+}
+
+func (c *HContext) GetObject(obj interface{}) bool {
+	if c.StorageEngine == nil {
+		return false
+	}
+
+	key := GetPk(obj)
+	if key == "" {
+		return false
+	} else {
+		data, ok := c.StorageEngine.Get([]byte(key))
+		if ok {
+			err := json.Unmarshal(data, obj)
+			if err == nil {
+				return true
+			} else {
+				return false
+			}
+		} else {
+			return false
+		}
+	}
+}
+
+func (c *HContext) DeleteObject(obj interface{}) bool {
+	if c.StorageEngine == nil {
+		return false
+	}
+
+	key := GetPk(obj)
+	if key == "" {
+		return false
+	} else {
+		return c.StorageEngine.Delete([]byte(key))
+	}
+}
+
+func (c *HContext) IsObjectExists(obj interface{}) bool {
+	if c.StorageEngine == nil {
+		return false
+	}
+
+	key := GetPk(obj)
+	return c.StorageEngine.IsExists([]byte(key))
 }
