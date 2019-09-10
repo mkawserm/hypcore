@@ -153,6 +153,12 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["pbkdf2"]
+  revision = "094676da4a83be5288d281081bba63a173ce6772"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = ["internal/timeseries","trace"]
   revision = "a7b16738d86b947dd0fadb08ca2c2342b51958b6"
@@ -184,6 +190,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c10db29b0dca3ba69c9c116466e7480a8805a172ab6cdd283f73c36fec9d3c2a"
+  inputs-digest = "02a73520e21dc279acf4066459ffd7b66d399f9360f3aa8dafba0346b8b01a53"
   solver-name = "gps-cdcl"
   solver-version = 1

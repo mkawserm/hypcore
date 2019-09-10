@@ -1,6 +1,8 @@
 <component name="ProjectDictionaryState">
   <dictionary name="mkm">
     <words>
+      <w>abcdefghijklmnopqrstuvwxyz</w>
+      <w>bcrypt</w>
       <w>conntrack</w>
       <w>debugf</w>
       <w>errorf</w>
@@ -8,6 +10,7 @@
       <w>godeps</w>
       <w>golangci</w>
       <w>gopath</w>
+      <w>hasher</w>
       <w>hcftrrb</w>
       <w>hchnf</w>
       <w>hchs</w>
@@ -31,6 +34,7 @@
       <w>mmapping</w>
       <w>munshi</w>
       <w>netfilter</w>
+      <w>newencoded</w>
       <w>nufai</w>
       <w>runserver</w>
       <w>sprintf</w>

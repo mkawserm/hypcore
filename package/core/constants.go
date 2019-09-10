@@ -23,3 +23,9 @@ var (
 	//headerSecKeyCanonical        = textproto.CanonicalMIMEHeaderKey(headerSecKey)
 	//headerSecAcceptCanonical     = textproto.CanonicalMIMEHeaderKey(headerSecAccept)
 )
+
+const (
+	SuperGroup   = "super"
+	ServiceGroup = "service"
+	NormalGroup  = "normal"
+)
