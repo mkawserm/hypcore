@@ -30,6 +30,8 @@ type view struct {
 	session *session
 	id      string
 
+	options source.ViewOptions
+
 	// mu protects all mutable state of the view.
 	mu sync.Mutex
 
@@ -118,6 +120,10 @@ func (v *view) Folder() span.URI {
 	return v.folder
 }
 
+func (v *view) Options() source.ViewOptions {
+	return v.options
+}
+
 // Config returns the configuration used for the view's interaction with the
 // go/packages API. It is shared across all views.
 func (v *view) Config(ctx context.Context) *packages.Config {
@@ -201,7 +207,7 @@ func (v *view) buildProcessEnv(ctx context.Context) (*imports.ProcessEnv, error)
 		case "GO111MODULE":
 			env.GO111MODULE = split[1]
 		case "GOPROXY":
-			env.GOROOT = split[1]
+			env.GOPROXY = split[1]
 		case "GOFLAGS":
 			env.GOFLAGS = split[1]
 		case "GOSUMDB":
@@ -365,26 +371,24 @@ func (f *goFile) invalidateContent(ctx context.Context) {
 	f.view.mcache.mu.Lock()
 	defer f.view.mcache.mu.Unlock()
 
+	var toDelete []packageID
+	f.mu.Lock()
+	for id, cph := range f.pkgs {
+		if cph != nil {
+			toDelete = append(toDelete, id)
+		}
+	}
+	f.mu.Unlock()
+
 	f.handleMu.Lock()
 	defer f.handleMu.Unlock()
 
-	f.invalidateAST(ctx)
-	f.handle = nil
-}
-
-// invalidateAST invalidates the AST of a Go file,
-// including any position and type information that depends on it.
-func (f *goFile) invalidateAST(ctx context.Context) {
-	f.mu.Lock()
-	cphs := f.pkgs
-	f.mu.Unlock()
-
 	// Remove the package and all of its reverse dependencies from the cache.
-	for id, cph := range cphs {
-		if cph != nil {
-			f.view.remove(ctx, id, map[packageID]struct{}{})
-		}
+	for _, id := range toDelete {
+		f.view.remove(ctx, id, map[packageID]struct{}{})
 	}
+
+	f.handle = nil
 }
 
 // remove invalidates a package and its reverse dependencies in the view's

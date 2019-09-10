@@ -7,7 +7,6 @@ package cache
 import (
 	"context"
 	"go/ast"
-	"go/token"
 	"sync"
 
 	"golang.org/x/tools/internal/lsp/source"
@@ -40,42 +39,13 @@ type goFile struct {
 	meta map[packageID]*metadata
 }
 
-type astFile struct {
-	uri       span.URI
-	file      *ast.File
-	err       error // parse errors
-	ph        source.ParseGoHandle
-	isTrimmed bool
-}
-
-func (f *goFile) GetToken(ctx context.Context) (*token.File, error) {
-	file, err := f.GetAST(ctx, source.ParseFull)
-	if file == nil {
-		return nil, err
+// metadata assumes that the caller holds the f.mu lock.
+func (f *goFile) metadata() []*metadata {
+	result := make([]*metadata, 0, len(f.meta))
+	for _, m := range f.meta {
+		result = append(result, m)
 	}
-	tok := f.view.session.cache.fset.File(file.Pos())
-	if tok == nil {
-		return nil, errors.Errorf("no token.File for %s", f.URI())
-	}
-	return tok, nil
-}
-
-func (f *goFile) GetAST(ctx context.Context, mode source.ParseMode) (*ast.File, error) {
-	ctx = telemetry.File.With(ctx, f.URI())
-
-	if f.isDirty(ctx) || f.wrongParseMode(ctx, mode) {
-		if err := f.view.loadParseTypecheck(ctx, f); err != nil {
-			return nil, err
-		}
-	}
-	// Check for a cached AST first, in case getting a trimmed version would actually cause a re-parse.
-	fh := f.Handle(ctx)
-	cached, err := f.view.session.cache.cachedAST(fh, mode)
-	if cached != nil || err != nil {
-		return cached, err
-	}
-	ph := f.view.session.cache.ParseGoHandle(fh, mode)
-	return ph.Parse(ctx)
+	return result
 }
 
 func (cache *cache) cachedAST(fh source.FileHandle, mode source.ParseMode) (*ast.File, error) {
@@ -126,9 +96,10 @@ func (f *goFile) GetPackage(ctx context.Context) (source.Package, error) {
 
 func (f *goFile) GetCheckPackageHandles(ctx context.Context) ([]source.CheckPackageHandle, error) {
 	ctx = telemetry.File.With(ctx, f.URI())
+	fh := f.Handle(ctx)
 
-	if f.isDirty(ctx) || f.wrongParseMode(ctx, source.ParseFull) {
-		if err := f.view.loadParseTypecheck(ctx, f); err != nil {
+	if f.isDirty(ctx, fh) || f.wrongParseMode(ctx, fh, source.ParseFull) {
+		if err := f.view.loadParseTypecheck(ctx, f, fh); err != nil {
 			return nil, err
 		}
 	}
@@ -173,6 +144,24 @@ func (f *goFile) GetCachedPackage(ctx context.Context) (source.Package, error) {
 	return cph.Cached(ctx)
 }
 
+func (f *goFile) GetCachedPackages(ctx context.Context) ([]source.Package, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	var pkgs []source.Package
+	for _, cph := range f.pkgs {
+		pkg, err := cph.Cached(ctx)
+		if err != nil {
+			return nil, err
+		}
+		pkgs = append(pkgs, pkg)
+	}
+	if len(pkgs) == 0 {
+		return nil, errors.Errorf("no CheckPackageHandles for %s", f.URI())
+	}
+	return pkgs, nil
+}
+
 // bestCheckPackageHandle picks the "narrowest" package for a given file.
 //
 // By "narrowest" package, we mean the package with the fewest number of files
@@ -191,11 +180,10 @@ func bestCheckPackageHandle(uri span.URI, cphs []source.CheckPackageHandle) (sou
 	return result, nil
 }
 
-func (f *goFile) wrongParseMode(ctx context.Context, mode source.ParseMode) bool {
+func (f *goFile) wrongParseMode(ctx context.Context, fh source.FileHandle, mode source.ParseMode) bool {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	fh := f.Handle(ctx)
 	for _, cph := range f.pkgs {
 		for _, ph := range cph.Files() {
 			if fh.Identity() == ph.File().Identity() {
@@ -218,7 +206,7 @@ func (f *goFile) Builtin() (*ast.File, bool) {
 
 // isDirty is true if the file needs to be type-checked.
 // It assumes that the file's view's mutex is held by the caller.
-func (f *goFile) isDirty(ctx context.Context) bool {
+func (f *goFile) isDirty(ctx context.Context, fh source.FileHandle) bool {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -238,7 +226,6 @@ func (f *goFile) isDirty(ctx context.Context) bool {
 	if len(f.missingImports) > 0 {
 		return true
 	}
-	fh := f.Handle(ctx)
 	for _, cph := range f.pkgs {
 		for _, file := range cph.Files() {
 			// There is a type-checked package for the current file handle.
@@ -251,14 +238,6 @@ func (f *goFile) isDirty(ctx context.Context) bool {
 }
 
 func (f *goFile) GetActiveReverseDeps(ctx context.Context) (files []source.GoFile) {
-	f.mu.Lock()
-	meta := f.meta
-	f.mu.Unlock()
-
-	if meta == nil {
-		return nil
-	}
-
 	seen := make(map[packageID]struct{}) // visited packages
 	results := make(map[*goFile]struct{})
 
@@ -268,7 +247,7 @@ func (f *goFile) GetActiveReverseDeps(ctx context.Context) (files []source.GoFil
 	f.view.mcache.mu.Lock()
 	defer f.view.mcache.mu.Unlock()
 
-	for _, m := range meta {
+	for _, m := range f.metadata() {
 		f.view.reverseDeps(ctx, seen, results, m.id)
 		for f := range results {
 			if f == nil {

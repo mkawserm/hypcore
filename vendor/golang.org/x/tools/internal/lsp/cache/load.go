@@ -18,54 +18,73 @@ import (
 	errors "golang.org/x/xerrors"
 )
 
-func (view *view) loadParseTypecheck(ctx context.Context, f *goFile) error {
-	pkgs, err := view.load(ctx, f)
+func (view *view) loadParseTypecheck(ctx context.Context, f *goFile, fh source.FileHandle) error {
+	ctx, done := trace.StartSpan(ctx, "cache.view.loadParseTypeCheck", telemetry.URI.Of(f.URI()))
+	defer done()
+
+	meta, err := view.load(ctx, f, fh)
 	if err != nil {
 		return err
 	}
-	for _, m := range pkgs {
+	for _, m := range meta {
 		imp := &importer{
 			view:              view,
-			ctx:               ctx,
 			config:            view.Config(ctx),
 			seen:              make(map[packageID]struct{}),
 			topLevelPackageID: m.id,
 		}
-		cph, err := imp.checkPackageHandle(m)
+		cph, err := imp.checkPackageHandle(ctx, m)
 		if err != nil {
-			log.Error(ctx, "failed to get CheckPackgeHandle", err)
+			log.Error(ctx, "loadParseTypeCheck: failed to get CheckPackageHandle", err, telemetry.Package.Of(m.id))
 			continue
 		}
-		pkg, err := cph.check(ctx)
-		if err != nil {
-			log.Error(ctx, "failed to check package", err)
+		if _, err := cph.check(ctx); err != nil {
+			log.Error(ctx, "loadParseTypeCheck: failed to check package", err, telemetry.Package.Of(m.id))
 			continue
 		}
 		// Cache this package on the file object, since all dependencies are cached in the Import function.
-		imp.cachePackage(cph, pkg, m)
+		if err := imp.cachePackage(ctx, cph); err != nil {
+			log.Error(ctx, "loadParseTypeCheck: failed to cache package", err, telemetry.Package.Of(m.id))
+			continue
+		}
 	}
 	return nil
 }
 
-func (view *view) load(ctx context.Context, f *goFile) (map[packageID]*metadata, error) {
+func (view *view) load(ctx context.Context, f *goFile, fh source.FileHandle) ([]*metadata, error) {
+	ctx, done := trace.StartSpan(ctx, "cache.view.load", telemetry.URI.Of(f.URI()))
+	defer done()
+
 	view.mu.Lock()
 	defer view.mu.Unlock()
 
 	view.mcache.mu.Lock()
 	defer view.mcache.mu.Unlock()
 
+	var toDelete []packageID
+	f.mu.Lock()
+	for id, cph := range f.pkgs {
+		if cph != nil {
+			toDelete = append(toDelete, id)
+		}
+	}
+	f.mu.Unlock()
+
 	// If the AST for this file is trimmed, and we are explicitly type-checking it,
 	// don't ignore function bodies.
-	if f.wrongParseMode(ctx, source.ParseFull) {
-		f.invalidateAST(ctx)
+	if f.wrongParseMode(ctx, fh, source.ParseFull) {
+		// Remove the package and all of its reverse dependencies from the cache.
+		for _, id := range toDelete {
+			f.view.remove(ctx, id, map[packageID]struct{}{})
+		}
 	}
 
 	// Get the metadata for the file.
-	meta, err := view.checkMetadata(ctx, f)
+	meta, err := view.checkMetadata(ctx, f, fh)
 	if err != nil {
 		return nil, err
 	}
-	if len(f.meta) == 0 {
+	if len(meta) == 0 {
 		return nil, fmt.Errorf("no package metadata found for %s", f.URI())
 	}
 	return meta, nil
@@ -73,9 +92,16 @@ func (view *view) load(ctx context.Context, f *goFile) (map[packageID]*metadata,
 
 // checkMetadata determines if we should run go/packages.Load for this file.
 // If yes, update the metadata for the file and its package.
-func (v *view) checkMetadata(ctx context.Context, f *goFile) (map[packageID]*metadata, error) {
-	if !v.shouldRunGopackages(ctx, f) {
-		return f.meta, nil
+func (v *view) checkMetadata(ctx context.Context, f *goFile, fh source.FileHandle) ([]*metadata, error) {
+	// Check if we need to re-run go/packages before loading the package.
+	f.mu.Lock()
+	runGopackages := v.shouldRunGopackages(ctx, f, fh)
+	metadata := f.metadata()
+	f.mu.Unlock()
+
+	// The package metadata is correct as-is, so just return it.
+	if !runGopackages {
+		return metadata, nil
 	}
 
 	// Check if the context has been canceled before calling packages.Load.
@@ -95,6 +121,17 @@ func (v *view) checkMetadata(ctx context.Context, f *goFile) (map[packageID]*met
 	}
 	// Track missing imports as we look at the package's errors.
 	missingImports := make(map[packagePath]struct{})
+
+	// Clear metadata since we are re-running go/packages.
+	// Reset the file's metadata and type information if we are re-running `go list`.
+	f.mu.Lock()
+	for k := range f.meta {
+		delete(f.meta, k)
+	}
+	for k := range f.pkgs {
+		delete(f.pkgs, k)
+	}
+	f.mu.Unlock()
 
 	log.Print(ctx, "go/packages.Load", tag.Of("packages", len(pkgs)))
 	for _, pkg := range pkgs {
@@ -116,7 +153,7 @@ func (v *view) checkMetadata(ctx context.Context, f *goFile) (map[packageID]*met
 	return m, nil
 }
 
-func validateMetadata(ctx context.Context, missingImports map[packagePath]struct{}, f *goFile) (map[packageID]*metadata, error) {
+func validateMetadata(ctx context.Context, missingImports map[packagePath]struct{}, f *goFile) ([]*metadata, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -130,9 +167,11 @@ func validateMetadata(ctx context.Context, missingImports map[packagePath]struct
 	if sameSet(missingImports, f.missingImports) && len(f.pkgs) != 0 {
 		return nil, nil
 	}
+
 	// Otherwise, update the missing imports map.
 	f.missingImports = missingImports
-	return f.meta, nil
+
+	return f.metadata(), nil
 }
 
 func sameSet(x, y map[packagePath]struct{}) bool {
@@ -147,29 +186,15 @@ func sameSet(x, y map[packagePath]struct{}) bool {
 	return true
 }
 
-// reparseImports reparses a file's package and import declarations to
+// shouldRunGopackages reparses a file's package and import declarations to
 // determine if they have changed.
-func (v *view) shouldRunGopackages(ctx context.Context, f *goFile) (result bool) {
-	f.mu.Lock()
-	defer func() {
-		// Clear metadata if we are intending to re-run go/packages.
-		if result {
-			// Reset the file's metadata and type information if we are re-running `go list`.
-			for k := range f.meta {
-				delete(f.meta, k)
-			}
-			for k := range f.pkgs {
-				delete(f.pkgs, k)
-			}
-		}
-		f.mu.Unlock()
-	}()
-
+// It assumes that the caller holds the lock on the f.mu lock.
+func (v *view) shouldRunGopackages(ctx context.Context, f *goFile, fh source.FileHandle) (result bool) {
 	if len(f.meta) == 0 || len(f.missingImports) > 0 {
 		return true
 	}
 	// Get file content in case we don't already have it.
-	parsed, err := v.session.cache.ParseGoHandle(f.Handle(ctx), source.ParseHeader).Parse(ctx)
+	parsed, err := v.session.cache.ParseGoHandle(fh, source.ParseHeader).Parse(ctx)
 	if err == context.Canceled {
 		log.Error(ctx, "parsing file header", err, tag.Of("file", f.URI()))
 		return false

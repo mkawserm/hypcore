@@ -21,8 +21,9 @@ import (
 // IdentifierInfo holds information about an identifier in Go source.
 type IdentifierInfo struct {
 	Name string
-	mappedRange
+	View View
 	File GoFile
+	mappedRange
 
 	Type struct {
 		mappedRange
@@ -69,11 +70,11 @@ func findIdentifier(ctx context.Context, view View, f GoFile, pkg Package, file 
 	// If the position is not an identifier but immediately follows
 	// an identifier or selector period (as is common when
 	// requesting a completion), use the path to the preceding node.
-	result, err := identifier(ctx, view, f, pkg, file, pos-1)
-	if result == nil && err == nil {
-		err = errors.Errorf("no identifier found for %s", f.FileSet().Position(pos))
+	ident, err := identifier(ctx, view, f, pkg, file, pos-1)
+	if ident == nil && err == nil {
+		err = errors.New("no identifier found")
 	}
-	return result, err
+	return ident, err
 }
 
 // identifier checks a single position for a potential identifier.
@@ -92,6 +93,7 @@ func identifier(ctx context.Context, view View, f GoFile, pkg Package, file *ast
 		return nil, errors.Errorf("can't find node enclosing position")
 	}
 	result := &IdentifierInfo{
+		View: view,
 		File: f,
 		qf:   qualifier(file, pkg.GetTypes(), pkg.GetTypesInfo()),
 		pkg:  pkg,
@@ -140,7 +142,7 @@ func identifier(ctx context.Context, view View, f GoFile, pkg Package, file *ast
 			return nil, errors.Errorf("no declaration for %s", result.Name)
 		}
 		result.Declaration.node = decl
-		if result.Declaration.mappedRange, err = nameToRange(ctx, view, decl.Pos(), result.Name); err != nil {
+		if result.Declaration.mappedRange, err = nameToMappedRange(ctx, view, decl.Pos(), result.Name); err != nil {
 			return nil, err
 		}
 		return result, nil
@@ -165,10 +167,10 @@ func identifier(ctx context.Context, view View, f GoFile, pkg Package, file *ast
 		}
 	}
 
-	if result.Declaration.mappedRange, err = objToRange(ctx, view, result.Declaration.obj); err != nil {
+	if result.Declaration.mappedRange, err = objToMappedRange(ctx, view, result.Declaration.obj); err != nil {
 		return nil, err
 	}
-	if result.Declaration.node, err = objToNode(ctx, f.View(), pkg.GetTypes(), result.Declaration.obj, result.Declaration.mappedRange.spanRange); err != nil {
+	if result.Declaration.node, err = objToNode(ctx, view, pkg.GetTypes(), result.Declaration.obj, result.Declaration.mappedRange.spanRange); err != nil {
 		return nil, err
 	}
 	typ := pkg.GetTypesInfo().TypeOf(result.ident)
@@ -182,7 +184,7 @@ func identifier(ctx context.Context, view View, f GoFile, pkg Package, file *ast
 		if hasErrorType(result.Type.Object) {
 			return result, nil
 		}
-		if result.Type.mappedRange, err = objToRange(ctx, view, result.Type.Object); err != nil {
+		if result.Type.mappedRange, err = objToMappedRange(ctx, view, result.Type.Object); err != nil {
 			return nil, err
 		}
 	}
@@ -202,47 +204,6 @@ func typeToObject(typ types.Type) types.Object {
 
 func hasErrorType(obj types.Object) bool {
 	return types.IsInterface(obj.Type()) && obj.Pkg() == nil && obj.Name() == "error"
-}
-
-func objToRange(ctx context.Context, view View, obj types.Object) (mappedRange, error) {
-	if pkgName, ok := obj.(*types.PkgName); ok {
-		// An imported Go package has a package-local, unqualified name.
-		// When the name matches the imported package name, there is no
-		// identifier in the import spec with the local package name.
-		//
-		// For example:
-		// 		import "go/ast" 	// name "ast" matches package name
-		// 		import a "go/ast"  	// name "a" does not match package name
-		//
-		// When the identifier does not appear in the source, have the range
-		// of the object be the point at the beginning of the declaration.
-		if pkgName.Imported().Name() == pkgName.Name() {
-			return nameToRange(ctx, view, obj.Pos(), "")
-		}
-	}
-	return nameToRange(ctx, view, obj.Pos(), obj.Name())
-}
-
-func nameToRange(ctx context.Context, view View, pos token.Pos, name string) (mappedRange, error) {
-	return posToRange(ctx, view, pos, pos+token.Pos(len(name)))
-}
-
-func posToRange(ctx context.Context, view View, pos, end token.Pos) (mappedRange, error) {
-	if !pos.IsValid() {
-		return mappedRange{}, errors.Errorf("invalid position for %v", pos)
-	}
-	if !end.IsValid() {
-		return mappedRange{}, errors.Errorf("invalid position for %v", end)
-	}
-	posn := view.Session().Cache().FileSet().Position(pos)
-	_, m, err := cachedFileToMapper(ctx, view, span.FileURI(posn.Filename))
-	if err != nil {
-		return mappedRange{}, err
-	}
-	return mappedRange{
-		m:         m,
-		spanRange: span.NewRange(view.Session().Cache().FileSet(), pos, end),
-	}, nil
 }
 
 func objToNode(ctx context.Context, view View, originPkg *types.Package, obj types.Object, rng span.Range) (ast.Decl, error) {
@@ -309,6 +270,7 @@ func importSpec(ctx context.Context, view View, f GoFile, fAST *ast.File, pkg Pa
 		return nil, errors.Errorf("import path not quoted: %s (%v)", imp.Path.Value, err)
 	}
 	result := &IdentifierInfo{
+		View: view,
 		File: f,
 		Name: importPath,
 		pkg:  pkg,

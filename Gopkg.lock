@@ -155,13 +155,13 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["internal/timeseries","trace"]
-  revision = "ba9fcec4b297b415637633c5a6e8fa592e4a16c3"
+  revision = "a7b16738d86b947dd0fadb08ca2c2342b51958b6"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "1e83adbbebd0f5dc971915fd7e5db032c3d2b731"
+  revision = "bbd175535a8b9969bb0b33f1502f681ee0b122bd"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -173,7 +173,7 @@
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
-  revision = "573d9926052aeaeb5fbebcd3cf10d994c9c6d4f5"
+  revision = "dd2b5c81c5787692d57849f9ab43d07977f3e76c"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
