@@ -1,18 +1,25 @@
 package models
 
-import "github.com/mkawserm/hypcore/package/crypto/hasher"
+import (
+	"github.com/mkawserm/hypcore/package/crypto/hasher"
+	"time"
+)
 import "github.com/mkawserm/hypcore/package/core"
 
 type User struct {
-	Pk       string
-	Password string
-	Group    string
+	Pk        string
+	Password  string
+	Group     string
+	CreatedAt int64
+	UpdatedAt int64
 }
 
 func NewSuperUser(userName string, password string) *User {
 	u := &User{Pk: userName}
 	u.SetGroup(core.SuperGroup)
 	u.SetPassword(password)
+	u.CreatedAt = time.Now().UnixNano()
+	u.UpdatedAt = time.Now().UnixNano()
 	return u
 }
 
@@ -20,6 +27,10 @@ func NewServiceUser(userName string, password string) *User {
 	u := &User{Pk: userName}
 	u.SetGroup(core.ServiceGroup)
 	u.SetPassword(password)
+
+	u.CreatedAt = time.Now().UnixNano()
+	u.UpdatedAt = time.Now().UnixNano()
+
 	return u
 }
 
@@ -27,6 +38,10 @@ func NewNormalUser(userName string, password string) *User {
 	u := &User{Pk: userName}
 	u.SetGroup(core.NormalGroup)
 	u.SetPassword(password)
+
+	u.CreatedAt = time.Now().UnixNano()
+	u.UpdatedAt = time.Now().UnixNano()
+
 	return u
 }
 
