@@ -80,3 +80,33 @@ func BtsEqualFold(s, p []byte) bool {
 
 	return true
 }
+
+func IsObjectStructType(obj interface{}) bool {
+	if t := reflect.TypeOf(obj); t.Kind() == reflect.Ptr {
+		return t.Elem().Kind() == reflect.Struct
+	} else {
+		return t.Kind() == reflect.Struct
+	}
+}
+
+func GetObjectTypeName(obj interface{}) string {
+	if t := reflect.TypeOf(obj); t.Kind() == reflect.Ptr {
+		return t.Elem().PkgPath() + "::" + t.Elem().Name()
+	} else {
+		return t.Elem().PkgPath() + "::" + t.Name()
+	}
+}
+
+func GetPk(obj interface{}) string {
+	if IsObjectStructType(obj) {
+		typeName := GetObjectTypeName(obj)
+		elementsField := reflect.ValueOf(obj).Elem()
+		pk := elementsField.FieldByName("Pk")
+		if pk.IsValid() && pk.Kind() == reflect.String {
+			keyName := string("<" + typeName + "::Pk::" + pk.String() + ">")
+			return keyName
+		}
+	}
+
+	return ""
+}

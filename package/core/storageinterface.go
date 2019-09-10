@@ -9,9 +9,4 @@ type StorageInterface interface {
 	Delete(key []byte) bool
 
 	IsExists(key []byte) bool
-
-	AddObject(obj interface{}) bool
-	GetObject(obj interface{}) bool
-	DeleteObject(obj interface{}) bool
-	IsObjectExists(obj interface{}) bool
 }
