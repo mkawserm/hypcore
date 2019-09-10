@@ -18,9 +18,9 @@ func IsObjectStructType(obj interface{}) bool {
 
 func GetObjectTypeName(obj interface{}) string {
 	if t := reflect.TypeOf(obj); t.Kind() == reflect.Ptr {
-		return t.Elem().Name()
+		return t.Elem().PkgPath() + "::" + t.Elem().Name()
 	} else {
-		return t.Name()
+		return t.Elem().PkgPath() + "::" + t.Name()
 	}
 }
 
