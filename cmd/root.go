@@ -22,6 +22,8 @@ type HyperCoreCMD struct {
 	CreateConfigFileCMD *cobra.Command
 	ConfigFileCMD       *cobra.Command
 
+	CreateSuperUserCMD *cobra.Command
+
 	AuthorsCMD *cobra.Command
 	ShellCMD   *cobra.Command
 }
@@ -130,6 +132,28 @@ func (hcc *HyperCoreCMD) LoadDefaultsIfNil() {
 		}
 	}
 
+	if hcc.CreateSuperUserCMD == nil {
+		hcc.CreateSuperUserCMD = &cobra.Command{
+			Use:   "createsuperuser",
+			Short: "Create super user",
+			Run:   CreateSuperUserCmdRun,
+		}
+
+		hcc.CreateSuperUserCMD.Flags().String(
+			"username",
+			"",
+			"Username to be used for super user")
+
+		hcc.CreateSuperUserCMD.Flags().String(
+			"password",
+			"",
+			"password to be used for super user")
+
+		hcc.CreateSuperUserCMD.Flags().String(
+			"config",
+			"",
+			"Absolute path of the configuration file")
+	}
 }
 
 func (hcc *HyperCoreCMD) Setup() {
@@ -138,6 +162,7 @@ func (hcc *HyperCoreCMD) Setup() {
 	hcc.HyperCoreRootCMD.AddCommand(hcc.VersionCMD)
 	hcc.HyperCoreRootCMD.AddCommand(hcc.ServerCMD)
 	hcc.HyperCoreRootCMD.AddCommand(hcc.ConfigFileCMD)
+	hcc.HyperCoreRootCMD.AddCommand(hcc.CreateSuperUserCMD)
 
 	flag.CommandLine.AddGoFlagSet(goFlag.CommandLine)
 }

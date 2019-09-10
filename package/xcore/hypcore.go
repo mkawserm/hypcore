@@ -138,6 +138,10 @@ func (h *HypCore) ReconfigurePath(webSocketUpgradePath []byte, graphQLPath []byt
 	h.context.LivePath = livePath
 }
 
+func (h *HypCore) GetContext() *core2.HContext {
+	return h.context
+}
+
 func (h *HypCore) Setup() {
 	if h.context.StorageEngine == nil {
 		h.context.StorageEngine = &xdb2.StorageEngine{}
