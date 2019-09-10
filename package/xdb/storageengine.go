@@ -1,10 +1,42 @@
 package xdb
 
 import (
+	"encoding/json"
 	"github.com/dgraph-io/badger"
 	"github.com/dgraph-io/badger/options"
 	"github.com/golang/glog"
+	"reflect"
 )
+
+func IsObjectStructType(obj interface{}) bool {
+	if t := reflect.TypeOf(obj); t.Kind() == reflect.Ptr {
+		return t.Elem().Kind() == reflect.Struct
+	} else {
+		return t.Kind() == reflect.Struct
+	}
+}
+
+func GetObjectTypeName(obj interface{}) string {
+	if t := reflect.TypeOf(obj); t.Kind() == reflect.Ptr {
+		return t.Elem().Name()
+	} else {
+		return t.Name()
+	}
+}
+
+func GetPk(obj interface{}) string {
+	if IsObjectStructType(obj) {
+		typeName := GetObjectTypeName(obj)
+		elementsField := reflect.ValueOf(obj).Elem()
+		pk := elementsField.FieldByName("Pk")
+		if pk.IsValid() && pk.Kind() == reflect.String {
+			keyName := string("<" + typeName + "::" + pk.String() + ">")
+			return keyName
+		}
+	}
+
+	return ""
+}
 
 type badgerLogger struct {
 }
@@ -142,6 +174,53 @@ func (se *StorageEngine) Delete(key []byte) bool {
 func (se *StorageEngine) IsExists(key []byte) bool {
 	_, b := se.Get(key)
 	return b
+}
+
+func (se *StorageEngine) AddObject(obj interface{}) bool {
+	key := GetPk(obj)
+	if key == "" {
+		return false
+	} else {
+		data, err := json.Marshal(obj)
+		if err != nil {
+			return false
+		} else {
+			return se.Set([]byte(key), data)
+		}
+	}
+}
+
+func (se *StorageEngine) GetObject(obj interface{}) bool {
+	key := GetPk(obj)
+	if key == "" {
+		return false
+	} else {
+		data, ok := se.Get([]byte(key))
+		if ok {
+			err := json.Unmarshal(data, obj)
+			if err == nil {
+				return true
+			} else {
+				return false
+			}
+		} else {
+			return false
+		}
+	}
+}
+
+func (se *StorageEngine) DeleteObject(obj interface{}) bool {
+	key := GetPk(obj)
+	if key == "" {
+		return false
+	} else {
+		return se.Delete([]byte(key))
+	}
+}
+
+func (se *StorageEngine) IsObjectExists(obj interface{}) bool {
+	key := GetPk(obj)
+	return se.IsExists([]byte(key))
 }
 
 func (se *StorageEngine) runGc() {
