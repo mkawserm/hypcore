@@ -132,10 +132,14 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 	return h
 }
 
-func (h *HypCore) ReconfigurePath(webSocketUpgradePath []byte, graphQLPath []byte, livePath []byte) {
+func (h *HypCore) ReconfigurePath(webSocketUpgradePath []byte,
+	graphQLPath []byte,
+	livePath []byte) {
+
 	h.context.WebSocketUpgradePath = webSocketUpgradePath
 	h.context.GraphQLPath = graphQLPath
 	h.context.LivePath = livePath
+
 }
 
 func (h *HypCore) GetContext() *core2.HContext {
