@@ -5,6 +5,7 @@
       <w>bcrypt</w>
       <w>conntrack</w>
       <w>createsuperuser</w>
+      <w>crit</w>
       <w>debugf</w>
       <w>errorf</w>
       <w>glog</w>

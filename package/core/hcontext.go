@@ -33,9 +33,10 @@ type HContext struct {
 	ServeWS ServeWSInterface // read only
 
 	AuthBearer     string // read only
-	AuthPublicKey  string
-	AuthPrivateKey string
-	AuthAlgorithm  string
+	AuthPublicKey  string // read only
+	AuthPrivateKey string // read only
+	AuthSecretKey  string // read only
+	AuthAlgorithm  string // read only
 
 	OnlineUserDataStore OnlineUserDataStoreInterface // read only
 
