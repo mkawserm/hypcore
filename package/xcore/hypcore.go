@@ -40,6 +40,7 @@ type HypCoreConfig struct {
 	AuthBearer     string
 	AuthPublicKey  string
 	AuthPrivateKey string
+	AuthSecretKey  string
 	AuthAlgorithm  string
 
 	Auth                core2.AuthInterface
@@ -58,25 +59,57 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 	if hc.Auth != nil && hc.OnlineUserDataStore == nil {
 		glog.Fatal("Auth found but no OnlineUserDataStore found. Please configure OnlineUserDataStore.")
 		return nil
+
 	} else if hc.Auth == nil && hc.OnlineUserDataStore != nil {
 		glog.Fatal("OnlineUserDataStore found but no Auth found. Please configure Auth.")
 		return nil
+
 	} else if hc.Auth != nil && hc.OnlineUserDataStore != nil {
 		if hc.AuthBearer == "" {
 			glog.Fatal("AuthBearer is required but not provided")
+			return nil
 		}
 
 		if hc.AuthAlgorithm == "" {
 			glog.Fatal("AuthAlgorithm is required but not provided")
+			return nil
+		} else if hc.AuthAlgorithm == "EdDSA" ||
+			hc.AuthAlgorithm == "ES256" ||
+			hc.AuthAlgorithm == "ES384" ||
+			hc.AuthAlgorithm == "ES512" ||
+
+			hc.AuthAlgorithm == "PS256" ||
+			hc.AuthAlgorithm == "PS384" ||
+			hc.AuthAlgorithm == "PS512" ||
+
+			hc.AuthAlgorithm == "RS256" ||
+			hc.AuthAlgorithm == "RS384" ||
+			hc.AuthAlgorithm == "RS512" {
+
+			if hc.AuthPublicKey == "" {
+				glog.Fatal("AuthPublicKey is required but not provided")
+				return nil
+			}
+
+			if hc.AuthPrivateKey == "" {
+				glog.Fatal("AuthPrivateKey is required but not provided")
+				return nil
+			}
+
+		} else if hc.AuthAlgorithm == "HS256" ||
+			hc.AuthAlgorithm == "HS384" ||
+			hc.AuthAlgorithm == "HS512" {
+
+			if hc.AuthSecretKey == "" {
+				glog.Fatal("AuthSecretKey is required but not provided")
+				return nil
+			}
+
+		} else {
+			glog.Fatal("Unknown AuthAlgorithm")
+			return nil
 		}
 
-		if hc.AuthPublicKey == "" {
-			glog.Fatal("AuthPublicKey is required but not provided")
-		}
-
-		if hc.AuthPrivateKey == "" {
-			glog.Fatal("AuthPrivateKey is required but not provided")
-		}
 	}
 
 	hContext := &core2.HContext{
@@ -118,6 +151,7 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		AuthBearer:     hc.AuthBearer,
 		AuthPublicKey:  hc.AuthPublicKey,
 		AuthAlgorithm:  hc.AuthAlgorithm,
+		AuthSecretKey:  hc.AuthSecretKey,
 		AuthPrivateKey: hc.AuthPrivateKey,
 	}
 
