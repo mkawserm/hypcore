@@ -29,7 +29,7 @@ type HypCoreConfig struct {
 	CertFile  string
 	KeyFile   string
 
-	EnableAuth bool
+	EnableAuthVerify bool
 
 	EnableLivePath      bool
 	EnableAuthPath      bool
@@ -128,11 +128,8 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 
 		Lock: &sync.RWMutex{},
 
-		IsLive: true,
-
-		AuthVerify:          hc.AuthVerify,
-		ServeWS:             hc.ServeWS,
-		OnlineUserDataStore: hc.OnlineUserDataStore,
+		IsLive:  true,
+		ServeWS: hc.ServeWS,
 
 		StorageEngine: hc.StorageEngine,
 		DbPath:        hc.DbPath,
@@ -160,6 +157,14 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		AuthAlgorithm:  hc.AuthAlgorithm,
 		AuthSecretKey:  hc.AuthSecretKey,
 		AuthPrivateKey: hc.AuthPrivateKey,
+	}
+
+	if hc.EnableAuthVerify {
+		hContext.AuthVerify = hc.AuthVerify
+		hContext.OnlineUserDataStore = hc.OnlineUserDataStore
+	} else {
+		hContext.AuthVerify = nil
+		hContext.OnlineUserDataStore = nil
 	}
 
 	if hContext.ServeWS == nil {
@@ -334,7 +339,7 @@ func (h *HypCore) runMainEventLoop() {
 			}
 
 			if msg, _, err := wsutil.ReadClientData(conn); err != nil {
-				if h.context.HasAuth() {
+				if h.context.HasAuthVerify() {
 					h.context.RemoveUser(core2.WebsocketFileDescriptor(conn))
 				}
 
@@ -413,8 +418,8 @@ func (h *HypCore) SetIsLive(live bool) {
 	h.context.SetIsLive(live)
 }
 
-func (h *HypCore) HasAuth() bool {
-	return h.context.HasAuth()
+func (h *HypCore) HasAuthVerify() bool {
+	return h.context.HasAuthVerify()
 }
 
 func (h *HypCore) AddMiddleware(mi core2.MiddlewareInterface) {

@@ -23,7 +23,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	group := ""
 
 	// check for auth
-	if gqlView.Context.HasAuth() {
+	if gqlView.Context.HasAuthVerify() {
 		h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 		if h == "" {
 			GraphQLErrorMessage(w,
@@ -90,7 +90,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var params graphql.Params
 
-	if gqlView.Context.HasAuth() {
+	if gqlView.Context.HasAuthVerify() {
 		params = graphql.Params{
 			Schema:        gqlView.Context.GraphQLSchema,
 			RequestString: string(bodyBytes),

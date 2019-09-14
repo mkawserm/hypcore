@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/mkawserm/hypcore/package/core"
 	"github.com/mkawserm/hypcore/package/xcore"
+	"github.com/mkawserm/hypcore/package/xdb"
 	"github.com/spf13/viper"
 )
 
@@ -11,19 +12,19 @@ var IsConfigurationOkHook = func(v *viper.Viper, silent bool, logToGlog bool) bo
 }
 
 var AuthVerifyHook = func() core.AuthVerifyInterface {
-	return nil
+	return &core.AuthVerify{}
 }
 
 var ServeWSHook = func() core.ServeWSInterface {
-	return nil
+	return &core.ServeWSGraphQL{}
 }
 
 var OnlineUserDataStoreHook = func() core.OnlineUserDataStoreInterface {
-	return nil
+	return core.NewOnlineUserMemoryMap()
 }
 
 var StorageEngineHook = func() core.StorageInterface {
-	return nil
+	return &xdb.StorageEngine{}
 }
 
 var HypCoreSetupHook = func(v *viper.Viper, hypCore *xcore.HypCore, silent bool, logToGlog bool) bool {

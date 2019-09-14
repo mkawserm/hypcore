@@ -114,7 +114,7 @@ func (c *HContext) GetIsLive() bool {
 	return c.IsLive
 }
 
-func (c *HContext) HasAuth() bool {
+func (c *HContext) HasAuthVerify() bool {
 	return c.AuthVerify != nil
 }
 

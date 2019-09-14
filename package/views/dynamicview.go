@@ -16,7 +16,7 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("PATH: " + r.URL.Path)
 
 	// check for auth
-	if dView.Context.HasAuth() {
+	if dView.Context.HasAuthVerify() {
 		uid := ""
 		ok := false
 

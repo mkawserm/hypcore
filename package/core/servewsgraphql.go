@@ -15,7 +15,7 @@ type ServeWSGraphQL struct {
 func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, message []byte) {
 	var params graphql.Params
 
-	if ctx.HasAuth() {
+	if ctx.HasAuthVerify() {
 		params = graphql.Params{
 			Schema:        ctx.GraphQLSchema,
 			RequestString: string(message),

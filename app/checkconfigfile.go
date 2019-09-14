@@ -118,48 +118,56 @@ func IsConfigurationOk(v *viper.Viper, silent bool, logToGlog bool) bool {
 
 	}
 
-	if v.IsSet("server.enableAuth") && v.GetBool("server.enableAuth") {
-
-		if v.IsSet("auth.bearer") {
-			if v.GetString("auth.bearer") == "" {
-				SpitError("auth.bearer can not be empty", silent, logToGlog)
-				return false
-			}
-		} else {
-			SpitError("auth.bearer key is missing in the configuration", silent, logToGlog)
+	if v.IsSet("auth.bearer") {
+		if v.GetString("auth.bearer") == "" {
+			SpitError("auth.bearer can not be empty", silent, logToGlog)
 			return false
 		}
+	} else {
+		SpitError("auth.bearer key is missing in the configuration", silent, logToGlog)
+		return false
+	}
 
-		if v.IsSet("auth.algorithm") {
-			if v.GetString("auth.algorithm") == "" {
-				SpitError("auth.algorithm can not be empty", silent, logToGlog)
-				return false
-			}
-		} else {
-			SpitError("auth.algorithm key is missing in the configuration", silent, logToGlog)
+	if v.IsSet("auth.algorithm") {
+		if v.GetString("auth.algorithm") == "" {
+			SpitError("auth.algorithm can not be empty", silent, logToGlog)
 			return false
 		}
+	} else {
+		SpitError("auth.algorithm key is missing in the configuration", silent, logToGlog)
+		return false
+	}
 
-		if v.IsSet("auth.publicKey") {
-			if v.GetString("auth.publicKey") == "" {
-				SpitError("auth.publicKey can not be empty", silent, logToGlog)
-				return false
-			}
-		} else {
-			SpitError("auth.publicKey key is missing in the configuration", silent, logToGlog)
+	//TODO: check auth.algorithm
+
+	if v.IsSet("auth.publicKey") {
+		if v.GetString("auth.publicKey") == "" {
+			SpitError("auth.publicKey can not be empty", silent, logToGlog)
 			return false
 		}
+	} else {
+		SpitError("auth.publicKey key is missing in the configuration", silent, logToGlog)
+		return false
+	}
 
-		if v.IsSet("auth.privateKey") {
-			if v.GetString("auth.privateKey") == "" {
-				SpitError("auth.privateKey can not be empty", silent, logToGlog)
-				return false
-			}
-		} else {
-			SpitError("auth.privateKey key is missing in the configuration", silent, logToGlog)
+	if v.IsSet("auth.privateKey") {
+		if v.GetString("auth.privateKey") == "" {
+			SpitError("auth.privateKey can not be empty", silent, logToGlog)
 			return false
 		}
+	} else {
+		SpitError("auth.privateKey key is missing in the configuration", silent, logToGlog)
+		return false
+	}
 
+	if v.IsSet("auth.secretKey") {
+		if v.GetString("auth.secretKey") == "" {
+			SpitError("auth.secretKey can not be empty", silent, logToGlog)
+			return false
+		}
+	} else {
+		SpitError("auth.secretKey key is missing in the configuration", silent, logToGlog)
+		return false
 	}
 
 	return IsConfigurationOkHook(v, silent, logToGlog)

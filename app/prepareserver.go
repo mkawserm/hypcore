@@ -17,7 +17,7 @@ func PrepareServer(v *viper.Viper) *xcore.HypCore {
 		CertFile:  v.GetString("server.certFile"),
 		KeyFile:   v.GetString("server.keyFile"),
 
-		EnableAuth: v.GetBool("server.enableAuth"),
+		EnableAuthVerify: v.GetBool("server.enableAuthVerify"),
 
 		EnableLivePath:      v.GetBool("server.enableLivePath"),
 		EnableAuthPath:      v.GetBool("server.enableAuthPath"),

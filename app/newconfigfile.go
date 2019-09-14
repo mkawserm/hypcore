@@ -43,17 +43,17 @@ func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
 	v.SetDefault("server.certFile", ConfigFilePathFirst+"/cert.pem")
 	v.SetDefault("server.keyFile", ConfigFilePathFirst+"/key.pem")
 
-	v.SetDefault("server.enableAuth", false)
+	v.SetDefault("server.enableAuthVerify", true)
 
 	v.SetDefault("server.enableLivePath", true)
 	v.SetDefault("server.enableAuthPath", true)
 	v.SetDefault("server.enableGraphQLPath", true)
 	v.SetDefault("server.enableWebSocketPath", true)
 
+	v.SetDefault("server.authPath", "/auth")
+	v.SetDefault("server.webSocketPath", "/ws")
 	v.SetDefault("server.livePath", "/api/live")
 	v.SetDefault("server.graphQLPath", "/graphql")
-	v.SetDefault("server.webSocketPath", "/ws")
-	v.SetDefault("server.authPath", "/auth")
 
 	v.SetDefault("server.eventQueueSize", 100)
 	v.SetDefault("server.waitingTime", 100)
@@ -61,9 +61,10 @@ func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
 	v.SetDefault("db.path", ConfigFilePathFirst+"/db")
 
 	v.SetDefault("auth.bearer", "JWT")
-	v.SetDefault("auth.algorithm", "")
+	v.SetDefault("auth.algorithm", "HS256")
 	v.SetDefault("auth.publicKey", "")
 	v.SetDefault("auth.privateKey", "")
+	v.SetDefault("auth.secretKey", "")
 
 	return v
 }

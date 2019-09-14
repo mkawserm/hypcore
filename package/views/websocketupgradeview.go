@@ -46,7 +46,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		if wsu.Context.HasAuth() {
+		if wsu.Context.HasAuthVerify() {
 			uid := ""
 			ok := false
 			group := ""
