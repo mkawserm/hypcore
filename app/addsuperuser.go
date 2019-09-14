@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/logrusorgru/aurora"
+	"github.com/mkawserm/hypcore/package/constants"
 	"github.com/mkawserm/hypcore/package/models"
 	"github.com/spf13/viper"
 	"time"
@@ -13,11 +14,16 @@ func AddSuperUser(v *viper.Viper, userName string, password string) {
 	if hc != nil {
 		hc.Setup()
 		hcc := hc.GetContext()
-		user := models.NewSuperUser(userName, password)
+		user := &models.User{Pk: userName}
 		updated := false
-		if hcc.IsObjectExists(user) {
-			hcc.GetObject(user)
+		if hcc.GetObject(user) {
+			user.SetPassword(password)
+			user.SetGroup(constants.SuperGroup)
 			updated = true
+		} else {
+			user.SetPassword(password)
+			user.SetGroup(constants.SuperGroup)
+			user.CreatedAt = time.Now().UnixNano()
 		}
 
 		user.UpdatedAt = time.Now().UnixNano()

@@ -24,14 +24,18 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 			},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			glog.Infoln("JWT Token Auth")
+
 			username := params.Args["username"].(string)
-			password := params.Args["username"].(string)
+			password := params.Args["password"].(string)
 
 			user := &models.User{Pk: username}
 
 			if ctx.GetObject(user) {
+				glog.Infoln(user.Password)
 				if user.IsPasswordValid(password) {
-					claims := jwt.Claims{}
+					claims := jwt.Claims{Set: make(map[string]interface{})}
+
 					claims.Subject = username
 					claims.Set["group"] = user.GetGroup()
 					claims.Set["uid"] = username
@@ -148,7 +152,11 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 							glog.Errorf("PS Token generation error: %s\n", err.Error())
 						}
 					}
+				} else {
+					glog.Errorf("Invalid password\n")
 				}
+			} else {
+				glog.Errorf("User '{%s}' not found\n", username)
 			}
 
 			return "", nil

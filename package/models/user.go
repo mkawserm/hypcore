@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/mkawserm/hypcore/package/constants"
 	"github.com/mkawserm/hypcore/package/crypto/hasher"
 	"time"
@@ -67,8 +68,12 @@ func (u *User) IsPasswordValid(rawPassword string) bool {
 }
 
 func (u *User) SetPassword(rawPassword string) bool {
+	fmt.Printf("RAW PSS '%s' \n", rawPassword)
+
 	var err error
 	u.Password, err = hasher.MakePassword(rawPassword, "", "default")
+
+	fmt.Println(u.Password)
 
 	if err == nil {
 		return true

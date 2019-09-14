@@ -110,10 +110,12 @@ func (se *StorageEngine) Get(key []byte) ([]byte, bool) {
 
 	err := se.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(key)
-		err = item.Value(func(val []byte) error {
-			valCopy = append([]byte{}, val...)
-			return nil
-		})
+		if err == nil {
+			err = item.Value(func(val []byte) error {
+				valCopy = append([]byte{}, val...)
+				return nil
+			})
+		}
 		return err
 	})
 

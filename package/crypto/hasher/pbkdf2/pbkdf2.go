@@ -44,8 +44,12 @@ func (h *PBKDF2Hasher) Encode(password string, salt string, iterations int) (str
 		iterations = h.Iterations
 	}
 
-	hash := pbkdf2.Key([]byte(password), []byte(salt), iterations, h.Size, h.Digest)
-	b64Hash := base64.StdEncoding.EncodeToString(hash)
+	//fmt.Println("PASS:", password)
+	//fmt.Println("SALT:",salt)
+	//fmt.Println("ITERATIONS:",iterations)
+
+	hashData := pbkdf2.Key([]byte(password), []byte(salt), iterations, h.Size, h.Digest)
+	b64Hash := base64.StdEncoding.EncodeToString(hashData)
 	return fmt.Sprintf("%s$%d$%s$%s", h.Algorithm, iterations, salt, b64Hash), nil
 }
 
@@ -59,11 +63,16 @@ func (h *PBKDF2Hasher) Verify(password string, encoded string) (bool, error) {
 
 	algorithm, iterations, salt := s[0], s[1], s[2]
 
+	//fmt.Println(algorithm)
+	//fmt.Println(iterations)
+	//fmt.Println(salt)
+
 	if algorithm != h.Algorithm {
 		return false, ErrAlgorithmMismatch
 	}
 
 	i, err := strconv.Atoi(iterations)
+	fmt.Println(i)
 
 	if err != nil {
 		return false, ErrHashComponentUnreadable
@@ -74,6 +83,7 @@ func (h *PBKDF2Hasher) Verify(password string, encoded string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	//fmt.Println(newencoded)
 
 	return hmac.Equal([]byte(newencoded), []byte(encoded)), nil
 }
