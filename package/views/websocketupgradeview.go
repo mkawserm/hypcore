@@ -49,6 +49,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		if wsu.Context.HasAuth() {
 			uid := ""
 			ok := false
+			group := ""
 
 			h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 
@@ -58,13 +59,27 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				return
 
 			} else {
-				uid, ok = wsu.Context.AuthVerify.GetUID([]byte(h), wsu.Context.AuthBearer)
+				var dataMap map[string]interface{}
+
+				dataMap, ok = wsu.Context.AuthVerify.Verify([]byte(h),
+					[]byte(wsu.Context.AuthPublicKey),
+					[]byte(wsu.Context.AuthSecretKey),
+					wsu.Context.AuthBearer)
+
+				if ok {
+					if uniqueId, found := dataMap["uid"]; found {
+						uid = uniqueId.(string)
+					}
+					if groupString, found := dataMap["group"]; found {
+						group = groupString.(string)
+					}
+				}
 			}
 
 			if ok {
 				if uid == "" {
 					GraphQLErrorMessage(w, []byte("Oops! No UID found from AuthVerifyInterface !!!"),
-						mcodes.NoUIDFromAuthInterface, 400)
+						mcodes.NoUIDFromAuthVerifyInterface, 400)
 					return
 				}
 
@@ -81,7 +96,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				} else {
 					//NOTE Only if has websocket auth
 					//connection added to the container now we'll map it to specific user based on authorization
-					wsu.Context.AddUser(uid, core2.WebsocketFileDescriptor(conn))
+					wsu.Context.AddUser(uid, group, core2.WebsocketFileDescriptor(conn))
 				}
 
 			} else { // Failed to authorize. not ok

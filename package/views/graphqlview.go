@@ -19,11 +19,11 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("PATH: " + r.URL.Path)
 
 	uid := ""
+	ok := false
+	group := ""
 
 	// check for auth
 	if gqlView.Context.HasAuth() {
-		ok := false
-
 		h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
 		if h == "" {
 			GraphQLErrorMessage(w,
@@ -33,14 +33,28 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 
 		} else {
-			uid, ok = gqlView.Context.AuthVerify.GetUID([]byte(h), gqlView.Context.AuthBearer)
+			var dataMap map[string]interface{}
+
+			dataMap, ok = gqlView.Context.AuthVerify.Verify([]byte(h),
+				[]byte(gqlView.Context.AuthPublicKey),
+				[]byte(gqlView.Context.AuthSecretKey),
+				gqlView.Context.AuthBearer)
+
+			if ok {
+				if uniqueId, found := dataMap["uid"]; found {
+					uid = uniqueId.(string)
+				}
+				if groupString, found := dataMap["group"]; found {
+					group = groupString.(string)
+				}
+			}
 		}
 
 		if ok {
 			if uid == "" {
 				GraphQLErrorMessage(w,
 					[]byte("Oops! No UID found from AuthVerifyInterface !!!"),
-					mcodes.NoUIDFromAuthInterface, 400)
+					mcodes.NoUIDFromAuthVerifyInterface, 400)
 				return
 			}
 
@@ -49,7 +63,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				mcodes.InvalidAuthorizationData, 400)
 			return
 		}
-	}
+	} // end of auth
 
 	glog.Infoln("Processing Middleware in the GraphQLView.")
 	for _, mi := range gqlView.Context.MiddlewareList {
@@ -82,10 +96,16 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			RequestString: string(bodyBytes),
 			Context: context.WithValue(context.Background(),
 				"auth",
-				map[string]string{"uid": uid}),
+				map[string]string{"uid": uid, "group": group}),
 		}
 	} else {
-		params = graphql.Params{Schema: gqlView.Context.GraphQLSchema, RequestString: string(bodyBytes)}
+		params = graphql.Params{
+			Schema:        gqlView.Context.GraphQLSchema,
+			RequestString: string(bodyBytes),
+			Context: context.WithValue(context.Background(),
+				"auth",
+				map[string]string{}),
+		}
 	}
 
 	res := graphql.Do(params)

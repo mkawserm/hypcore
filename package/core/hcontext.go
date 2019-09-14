@@ -126,9 +126,9 @@ func (c *HContext) HasWSServer() bool {
 //	c.AuthVerifyInterface = webSocketAuth
 //}
 
-func (c *HContext) AddUser(uid string, sid int) {
+func (c *HContext) AddUser(uid string, group string, sid int) {
 	if c.OnlineUserDataStore != nil {
-		c.OnlineUserDataStore.AddUser(uid, sid)
+		c.OnlineUserDataStore.AddUser(uid, group, sid)
 	}
 }
 
@@ -149,6 +149,14 @@ func (c *HContext) GetIdList(uid string) []int {
 func (c *HContext) GetUIDFromSID(sid int) string {
 	if c.OnlineUserDataStore != nil {
 		return c.OnlineUserDataStore.GetUIDFromSID(sid)
+	} else {
+		return ""
+	}
+}
+
+func (c *HContext) GetGroupFromSID(sid int) string {
+	if c.OnlineUserDataStore != nil {
+		return c.OnlineUserDataStore.GetGroupFromSID(sid)
 	} else {
 		return ""
 	}

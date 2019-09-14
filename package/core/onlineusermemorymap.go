@@ -6,24 +6,31 @@ import (
 )
 
 type OnlineUserMemoryMap struct {
-	UserMap           map[string][]int
-	SocketIDToUserMap map[int]string
-	UserMapLock       *sync.RWMutex
+	UserMap                map[string][]int
+	SocketIDToUserMap      map[int]string
+	SocketIDToUserGroupMap map[int]string
+
+	UserMapLock *sync.RWMutex
 }
 
 func NewOnlineUserMemoryMap() *OnlineUserMemoryMap {
 	return &OnlineUserMemoryMap{
-		UserMap:           make(map[string][]int),
-		SocketIDToUserMap: make(map[int]string),
-		UserMapLock:       &sync.RWMutex{},
+		UserMap:                make(map[string][]int),
+		SocketIDToUserMap:      make(map[int]string),
+		SocketIDToUserGroupMap: make(map[int]string),
+		UserMapLock:            &sync.RWMutex{},
 	}
 }
 
-func (o *OnlineUserMemoryMap) AddUser(uid string, sid int) {
+func (o *OnlineUserMemoryMap) AddUser(uid string, group string, sid int) {
 	o.UserMapLock.Lock()
 	defer o.UserMapLock.Unlock()
 
 	o.SocketIDToUserMap[sid] = uid
+
+	if group != "" {
+		o.SocketIDToUserGroupMap[sid] = group
+	}
 
 	if _, ok := o.UserMap[uid]; ok {
 		o.UserMap[uid] = append(o.UserMap[uid], sid)
@@ -36,6 +43,11 @@ func (o *OnlineUserMemoryMap) AddUser(uid string, sid int) {
 func (o *OnlineUserMemoryMap) RemoveUser(sid int) {
 	o.UserMapLock.Lock()
 	defer o.UserMapLock.Unlock()
+
+	_, ok2 := o.SocketIDToUserGroupMap[sid]
+	if ok2 {
+		delete(o.SocketIDToUserGroupMap, sid)
+	}
 
 	uid, ok1 := o.SocketIDToUserMap[sid]
 
@@ -83,6 +95,18 @@ func (o *OnlineUserMemoryMap) GetUIDFromSID(sid int) string {
 	defer o.UserMapLock.RUnlock()
 
 	val, ok := o.SocketIDToUserMap[sid]
+	if ok {
+		return val
+	} else {
+		return ""
+	}
+}
+
+func (o *OnlineUserMemoryMap) GetGroupFromSID(sid int) string {
+	o.UserMapLock.RLock()
+	defer o.UserMapLock.RUnlock()
+
+	val, ok := o.SocketIDToUserGroupMap[sid]
 	if ok {
 		return val
 	} else {

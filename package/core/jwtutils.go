@@ -19,7 +19,7 @@ type header struct {
 
 var b64encoding = base64.RawURLEncoding
 
-func IsHMAC(token []byte) bool {
+func IsHMACAlg(token []byte) bool {
 	firstDot := bytes.IndexByte(token, '.')
 	lastDot := bytes.LastIndexByte(token, '.')
 	if lastDot <= firstDot {
@@ -61,28 +61,45 @@ func tokenFromHeader(auth []byte, bearer string) []byte {
 	return []byte(strings.TrimPrefix(string(auth), trimmed_bearer+" "))
 }
 
-func Verify(token []byte, keyData []byte, bearer string) ([]byte, bool) {
+func VerifyJWT(token []byte, authPublicKey []byte, authSecretKey []byte, authBearer string, logToGlog bool) (map[string]interface{}, bool) {
 	keys := jwt.KeyRegister{}
-	if !IsHMAC(token) {
-		_, err := keys.LoadPEM(keyData, []byte(""))
+	if !IsHMACAlg(token) {
+		_, err := keys.LoadPEM([]byte(authPublicKey), []byte(""))
 		if err != nil {
-			glog.Errorf("LoadPEM failed: %s\n", err.Error())
+			if logToGlog {
+				glog.Errorf("LoadPEM failed: %s\n", err.Error())
+			}
+
 			return nil, false
 		}
 	} else {
-		keys.Secrets = append(keys.Secrets, keyData)
+		keys.Secrets = append(keys.Secrets, []byte(authSecretKey))
 	}
 
-	claims, err2 := keys.Check(tokenFromHeader(token, bearer))
+	claims, err2 := keys.Check(tokenFromHeader(token, authBearer))
 
 	if err2 == nil {
 		if claims.Valid(time.Now()) {
-			return claims.Raw, true
+			data := make(map[string]interface{})
+			err3 := json.Unmarshal(claims.Raw, data)
+			if err3 == nil {
+				return data, true
+			} else {
+				if logToGlog {
+					glog.Errorf("JSON Unmarshal error: %s\n", err3.Error())
+				}
+
+				return nil, false
+			}
 		} else {
-			glog.Errorln("JWT Time expired\n")
+			if logToGlog {
+				glog.Errorln("JWT Time expired\n")
+			}
 		}
 	} else {
-		glog.Errorf("JWT Signature check failed: %s\n", err2.Error())
+		if logToGlog {
+			glog.Errorf("JWT Signature check failed: %s\n", err2.Error())
+		}
 	}
 
 	return nil, false

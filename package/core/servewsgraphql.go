@@ -21,12 +21,18 @@ func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, m
 			RequestString: string(message),
 			Context: context.WithValue(context.Background(),
 				"auth",
-				map[string]string{"uid": ctx.GetUIDFromSID(connectionId)}),
+				map[string]string{
+					"uid":   ctx.GetUIDFromSID(connectionId),
+					"group": ctx.GetGroupFromSID(connectionId),
+				}),
 		}
 	} else {
 		params = graphql.Params{
 			Schema:        ctx.GraphQLSchema,
 			RequestString: string(message),
+			Context: context.WithValue(context.Background(),
+				"auth",
+				map[string]string{}),
 		}
 	}
 

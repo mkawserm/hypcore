@@ -1,7 +1,7 @@
 package mcodes
 
 const NoAuthorizationHeaderFound = "HCNAHF400"
-const NoUIDFromAuthInterface = "HCNUFAI400"
+const NoUIDFromAuthVerifyInterface = "HCNUFAVI400"
 const InvalidAuthorizationData = "HCIAD400"
 const InvalidRequestMethod = "HCIRM400"
 const FailedToReadRequestBody = "HCFTRRB400"
