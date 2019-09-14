@@ -17,8 +17,10 @@ func PrepareServer(v *viper.Viper) *xcore.HypCore {
 		CertFile:  v.GetString("server.certFile"),
 		KeyFile:   v.GetString("server.keyFile"),
 
-		EnableAuth:          v.GetBool("server.enableAuth"),
+		EnableAuth: v.GetBool("server.enableAuth"),
+
 		EnableLivePath:      v.GetBool("server.enableLivePath"),
+		EnableAuthPath:      v.GetBool("server.enableAuthPath"),
 		EnableGraphQLPath:   v.GetBool("server.enableGraphQLPath"),
 		EnableWebSocketPath: v.GetBool("server.enableWebSocketPath"),
 
@@ -33,6 +35,7 @@ func PrepareServer(v *viper.Viper) *xcore.HypCore {
 		AuthAlgorithm:  v.GetString("auth.algorithm"),
 		AuthPublicKey:  v.GetString("auth.publicKey"),
 		AuthPrivateKey: v.GetString("auth.privateKey"),
+		AuthSecretKey:  v.GetString("auth.secretKey"),
 	}
 
 	hypCore := xcore.NewHypCore(hcc)
@@ -41,6 +44,7 @@ func PrepareServer(v *viper.Viper) *xcore.HypCore {
 		[]byte(v.GetString("server.webSocketPath")),
 		[]byte(v.GetString("server.graphQLPath")),
 		[]byte(v.GetString("server.livePath")),
+		[]byte(v.GetString("server.authPath")),
 	)
 
 	if HypCoreSetupHook(v, hypCore, false, true) {

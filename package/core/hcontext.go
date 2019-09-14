@@ -41,6 +41,7 @@ type HContext struct {
 	OnlineUserDataStore OnlineUserDataStoreInterface // read only
 
 	LivePath             []byte // read only
+	AuthPath             []byte // read only
 	GraphQLPath          []byte // read only
 	WebSocketUpgradePath []byte // read only
 
@@ -58,7 +59,12 @@ type HContext struct {
 	GraphQLMutationFields graphql.Fields
 	GraphQLSchema         graphql.Schema
 
+	AuthQueryFields    graphql.Fields
+	AuthMutationFields graphql.Fields
+	AuthSchema         graphql.Schema
+
 	EnableLivePath      bool
+	EnableAuthPath      bool
 	EnableGraphQLPath   bool
 	EnableWebSocketPath bool
 }
@@ -69,6 +75,14 @@ func (c *HContext) AddGraphQLQueryField(name string, field *graphql.Field) {
 
 func (c *HContext) AddGraphQLMutationField(name string, field *graphql.Field) {
 	c.GraphQLMutationFields[name] = field
+}
+
+func (c *HContext) AddAuthQueryField(name string, field *graphql.Field) {
+	c.AuthQueryFields[name] = field
+}
+
+func (c *HContext) AddAuthMutationField(name string, field *graphql.Field) {
+	c.AuthMutationFields[name] = field
 }
 
 func (c *HContext) AddConnection(conn net.Conn) error {

@@ -46,12 +46,14 @@ func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
 	v.SetDefault("server.enableAuth", false)
 
 	v.SetDefault("server.enableLivePath", true)
+	v.SetDefault("server.enableAuthPath", true)
 	v.SetDefault("server.enableGraphQLPath", true)
 	v.SetDefault("server.enableWebSocketPath", true)
 
 	v.SetDefault("server.livePath", "/api/live")
 	v.SetDefault("server.graphQLPath", "/graphql")
 	v.SetDefault("server.webSocketPath", "/ws")
+	v.SetDefault("server.authPath", "/auth")
 
 	v.SetDefault("server.eventQueueSize", 100)
 	v.SetDefault("server.waitingTime", 100)

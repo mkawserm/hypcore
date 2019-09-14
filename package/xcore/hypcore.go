@@ -32,6 +32,7 @@ type HypCoreConfig struct {
 	EnableAuth bool
 
 	EnableLivePath      bool
+	EnableAuthPath      bool
 	EnableGraphQLPath   bool
 	EnableWebSocketPath bool
 
@@ -138,13 +139,19 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 
 		WebSocketUpgradePath: []byte("/ws"),
 		GraphQLPath:          []byte("/graphql"),
+		AuthPath:             []byte("/auth"),
 		LivePath:             []byte("/api/live"),
 
-		KeyValueStore:         make(map[string]string),
+		KeyValueStore: make(map[string]string),
+
 		GraphQLQueryFields:    make(graphql.Fields),
 		GraphQLMutationFields: make(graphql.Fields),
 
+		AuthQueryFields:    make(graphql.Fields),
+		AuthMutationFields: make(graphql.Fields),
+
 		EnableLivePath:      hc.EnableLivePath,
+		EnableAuthPath:      hc.EnableAuthPath,
 		EnableGraphQLPath:   hc.EnableGraphQLPath,
 		EnableWebSocketPath: hc.EnableWebSocketPath,
 
@@ -168,11 +175,13 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 
 func (h *HypCore) ReconfigurePath(webSocketUpgradePath []byte,
 	graphQLPath []byte,
-	livePath []byte) {
+	livePath []byte,
+	authPath []byte) {
 
 	h.context.WebSocketUpgradePath = webSocketUpgradePath
 	h.context.GraphQLPath = graphQLPath
 	h.context.LivePath = livePath
+	h.context.AuthPath = authPath
 
 }
 
@@ -240,6 +249,21 @@ func (h *HypCore) Setup() {
 
 	h.context.GraphQLSchema = schema
 
+	authSchema, _ := graphql.NewSchema(graphql.SchemaConfig{
+		Query: graphql.NewObject(graphql.ObjectConfig{
+			Name:        "Query",
+			Fields:      h.context.AuthQueryFields,
+			Description: "Auth Query",
+		}),
+		Mutation: graphql.NewObject(graphql.ObjectConfig{
+			Name:        "Mutation",
+			Fields:      h.context.AuthMutationFields,
+			Description: "Auth Mutation",
+		}),
+	})
+
+	h.context.AuthSchema = authSchema
+
 	if h.context.EventQueueSize == 0 {
 		h.context.EventQueueSize = 100
 	}
@@ -277,6 +301,13 @@ func (h *HypCore) Setup() {
 	if h.context.EnableGraphQLPath == true {
 		h.context.ServerMux.Handle(string(h.context.GraphQLPath),
 			&views.GraphQLView{
+				Context: h.context,
+			})
+	}
+
+	if h.context.EnableAuthPath == true {
+		h.context.ServerMux.Handle(string(h.context.AuthPath),
+			&views.AuthView{
 				Context: h.context,
 			})
 	}
