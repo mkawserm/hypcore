@@ -36,6 +36,11 @@ func PrepareServer(v *viper.Viper) *xcore.HypCore {
 		AuthPublicKey:  v.GetString("auth.publicKey"),
 		AuthPrivateKey: v.GetString("auth.privateKey"),
 		AuthSecretKey:  v.GetString("auth.secretKey"),
+
+		AuthTokenDefaultTimeout:      v.GetUint32("auth.tokenDefaultTimeout"),
+		AuthTokenNormalGroupTimeout:  v.GetUint32("auth.tokenNormalGroupTimeout"),
+		AuthTokenServiceGroupTimeout: v.GetUint32("auth.tokenServiceGroupTimeout"),
+		AuthTokenSuperGroupTimeout:   v.GetUint32("auth.tokenSuperGroupTimeout"),
 	}
 
 	hypCore := xcore.NewHypCore(hcc)

@@ -44,6 +44,11 @@ type HypCoreConfig struct {
 	AuthSecretKey  string
 	AuthAlgorithm  string
 
+	AuthTokenDefaultTimeout      uint32
+	AuthTokenSuperGroupTimeout   uint32
+	AuthTokenServiceGroupTimeout uint32
+	AuthTokenNormalGroupTimeout  uint32
+
 	AuthVerify          core2.AuthVerifyInterface
 	ServeWS             core2.ServeWSInterface
 	OnlineUserDataStore core2.OnlineUserDataStoreInterface
@@ -157,6 +162,11 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		AuthAlgorithm:  hc.AuthAlgorithm,
 		AuthSecretKey:  hc.AuthSecretKey,
 		AuthPrivateKey: hc.AuthPrivateKey,
+
+		AuthTokenDefaultTimeout:      hc.AuthTokenDefaultTimeout,
+		AuthTokenSuperGroupTimeout:   hc.AuthTokenSuperGroupTimeout,
+		AuthTokenNormalGroupTimeout:  hc.AuthTokenNormalGroupTimeout,
+		AuthTokenServiceGroupTimeout: hc.AuthTokenServiceGroupTimeout,
 	}
 
 	if hc.EnableAuthVerify {
@@ -195,6 +205,22 @@ func (h *HypCore) GetContext() *core2.HContext {
 }
 
 func (h *HypCore) Setup() {
+	if h.context.AuthTokenDefaultTimeout == 0 {
+		h.context.AuthTokenDefaultTimeout = 5 * 60 // 5 minutes
+	}
+
+	if h.context.AuthTokenSuperGroupTimeout == 0 {
+		h.context.AuthTokenSuperGroupTimeout = h.context.AuthTokenDefaultTimeout
+	}
+
+	if h.context.AuthTokenNormalGroupTimeout == 0 {
+		h.context.AuthTokenNormalGroupTimeout = h.context.AuthTokenDefaultTimeout
+	}
+
+	if h.context.AuthTokenServiceGroupTimeout == 0 {
+		h.context.AuthTokenServiceGroupTimeout = h.context.AuthTokenDefaultTimeout
+	}
+
 	if h.context.StorageEngine == nil {
 		h.context.StorageEngine = &xdb2.StorageEngine{}
 	}

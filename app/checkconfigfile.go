@@ -170,6 +170,46 @@ func IsConfigurationOk(v *viper.Viper, silent bool, logToGlog bool) bool {
 		return false
 	}
 
+	if v.IsSet("auth.tokenDefaultTimeout") {
+		if v.GetUint32("auth.tokenDefaultTimeout") == 0 {
+			SpitError("auth.tokenDefaultTimeout can not be 0", silent, logToGlog)
+			return false
+		}
+	} else {
+		SpitError("auth.tokenDefaultTimeout key is missing in the configuration", silent, logToGlog)
+		return false
+	}
+
+	if v.IsSet("auth.tokenSuperGroupTimeout") {
+		if v.GetUint32("auth.tokenSuperGroupTimeout") == 0 {
+			SpitError("auth.tokenSuperGroupTimeout can not be 0", silent, logToGlog)
+			return false
+		}
+	} else {
+		SpitError("auth.tokenSuperGroupTimeout key is missing in the configuration", silent, logToGlog)
+		return false
+	}
+
+	if v.IsSet("auth.tokenNormalGroupTimeout") {
+		if v.GetUint32("auth.tokenNormalGroupTimeout") == 0 {
+			SpitError("auth.tokenNormalGroupTimeout can not be 0", silent, logToGlog)
+			return false
+		}
+	} else {
+		SpitError("auth.tokenNormalGroupTimeout key is missing in the configuration", silent, logToGlog)
+		return false
+	}
+
+	if v.IsSet("auth.tokenServiceGroupTimeout") {
+		if v.GetUint32("auth.tokenServiceGroupTimeout") == 0 {
+			SpitError("auth.tokenServiceGroupTimeout can not be 0", silent, logToGlog)
+			return false
+		}
+	} else {
+		SpitError("auth.tokenServiceGroupTimeout key is missing in the configuration", silent, logToGlog)
+		return false
+	}
+
 	return IsConfigurationOkHook(v, silent, logToGlog)
 }
 

@@ -66,5 +66,10 @@ func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
 	v.SetDefault("auth.privateKey", "")
 	v.SetDefault("auth.secretKey", "")
 
+	v.SetDefault("auth.tokenDefaultTimeout", 5*60)
+	v.SetDefault("auth.tokenSuperGroupTimeout", 5*60)
+	v.SetDefault("auth.tokenNormalGroupTimeout", 5*60)
+	v.SetDefault("auth.tokenServiceGroupTimeout", 5*60)
+
 	return v
 }
