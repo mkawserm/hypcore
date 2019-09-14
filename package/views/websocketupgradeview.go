@@ -3,6 +3,7 @@ package views
 import (
 	"github.com/gobwas/ws"
 	"github.com/golang/glog"
+	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
@@ -34,13 +35,13 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		if u := httpGetHeader(r.Header, core2.HeaderUpgradeCanonical); u != "websocket" && !core2.StrEqualFold(u, "websocket") {
+		if u := httpGetHeader(r.Header, constants.HeaderUpgradeCanonical); u != "websocket" && !core2.StrEqualFold(u, "websocket") {
 			GraphQLErrorMessage(w, []byte("Oops! No Upgrade header found !!!"),
 				mcodes.WebSocketNoUpgradeHeaderFound, 400)
 			return
 		}
 
-		if c := httpGetHeader(r.Header, core2.HeaderConnectionCanonical); c != "Upgrade" && !core2.StrHasToken(c, "upgrade") {
+		if c := httpGetHeader(r.Header, constants.HeaderConnectionCanonical); c != "Upgrade" && !core2.StrHasToken(c, "upgrade") {
 			GraphQLErrorMessage(w, []byte("Oops! No Connection header found !!!"),
 				mcodes.WebSocketNoConnectionHeaderFound, 400)
 			return
@@ -51,7 +52,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			ok := false
 			group := ""
 
-			h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
+			h := httpGetHeader(r.Header, constants.HeaderAuthorizationCanonical)
 
 			if h == "" {
 				GraphQLErrorMessage(w, []byte("Oops! No Authorization header found !!!"),

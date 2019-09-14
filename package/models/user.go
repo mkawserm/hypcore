@@ -1,10 +1,10 @@
 package models
 
 import (
+	"github.com/mkawserm/hypcore/package/constants"
 	"github.com/mkawserm/hypcore/package/crypto/hasher"
 	"time"
 )
-import "github.com/mkawserm/hypcore/package/core"
 
 type User struct {
 	Pk        string
@@ -16,7 +16,7 @@ type User struct {
 
 func NewSuperUser(userName string, password string) *User {
 	u := &User{Pk: userName}
-	u.SetGroup(core.SuperGroup)
+	u.SetGroup(constants.SuperGroup)
 	u.SetPassword(password)
 	u.CreatedAt = time.Now().UnixNano()
 	u.UpdatedAt = time.Now().UnixNano()
@@ -25,7 +25,7 @@ func NewSuperUser(userName string, password string) *User {
 
 func NewServiceUser(userName string, password string) *User {
 	u := &User{Pk: userName}
-	u.SetGroup(core.ServiceGroup)
+	u.SetGroup(constants.ServiceGroup)
 	u.SetPassword(password)
 
 	u.CreatedAt = time.Now().UnixNano()
@@ -36,7 +36,7 @@ func NewServiceUser(userName string, password string) *User {
 
 func NewNormalUser(userName string, password string) *User {
 	u := &User{Pk: userName}
-	u.SetGroup(core.NormalGroup)
+	u.SetGroup(constants.NormalGroup)
 	u.SetPassword(password)
 
 	u.CreatedAt = time.Now().UnixNano()
@@ -46,15 +46,15 @@ func NewNormalUser(userName string, password string) *User {
 }
 
 func (u *User) IsSuperUser() bool {
-	return u.Group == core.SuperGroup
+	return u.Group == constants.SuperGroup
 }
 
 func (u *User) IsServiceUser() bool {
-	return u.Group == core.ServiceGroup
+	return u.Group == constants.ServiceGroup
 }
 
 func (u *User) IsNormalUser() bool {
-	return u.Group == core.NormalGroup
+	return u.Group == constants.NormalGroup
 }
 
 func (u *User) GetGroup() string {

@@ -2,6 +2,7 @@ package views
 
 import (
 	"github.com/golang/glog"
+	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
@@ -20,7 +21,7 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		uid := ""
 		ok := false
 
-		h := httpGetHeader(r.Header, core2.HeaderAuthorizationCanonical)
+		h := httpGetHeader(r.Header, constants.HeaderAuthorizationCanonical)
 		if h == "" {
 			GraphQLErrorMessage(w, []byte("Oops! No Authorization header found !!!"),
 				mcodes.NoAuthorizationHeaderFound, 400)
