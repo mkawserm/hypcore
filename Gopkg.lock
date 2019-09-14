@@ -155,19 +155,19 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2"]
-  revision = "094676da4a83be5288d281081bba63a173ce6772"
+  revision = "227b76d455e791cb042b03e633e2f7fbcfdf74a5"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["internal/timeseries","trace"]
-  revision = "a7b16738d86b947dd0fadb08ca2c2342b51958b6"
+  revision = "24e19bdeb0f2d062d8e2640d50a7aaf2a7f80e7a"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "bbd175535a8b9969bb0b33f1502f681ee0b122bd"
+  revision = "c3b328c6e5a763a2bfc82a48b4bd855037210934"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -179,7 +179,7 @@
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
-  revision = "dd2b5c81c5787692d57849f9ab43d07977f3e76c"
+  revision = "0240832f5c3d9ddcdcd51c66edbf8cd889a54108"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
