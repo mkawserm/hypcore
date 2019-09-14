@@ -33,13 +33,13 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 
 		} else {
-			uid, ok = gqlView.Context.Auth.GetUID([]byte(h), gqlView.Context.AuthBearer)
+			uid, ok = gqlView.Context.AuthVerify.GetUID([]byte(h), gqlView.Context.AuthBearer)
 		}
 
 		if ok {
 			if uid == "" {
 				GraphQLErrorMessage(w,
-					[]byte("Oops! No UID found from AuthInterface !!!"),
+					[]byte("Oops! No UID found from AuthVerifyInterface !!!"),
 					mcodes.NoUIDFromAuthInterface, 400)
 				return
 			}

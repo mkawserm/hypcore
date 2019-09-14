@@ -26,7 +26,7 @@ func PrepareServer(v *viper.Viper) *xcore.HypCore {
 
 		DbPath: v.GetString("db.path"),
 
-		Auth:                AuthHook(),
+		AuthVerify:          AuthVerifyHook(),
 		ServeWS:             ServeWSHook(),
 		OnlineUserDataStore: OnlineUserDataStoreHook(),
 		StorageEngine:       StorageEngineHook(),

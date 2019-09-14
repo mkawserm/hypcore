@@ -29,8 +29,8 @@ type HContext struct {
 	IsLive bool          // read write
 	Lock   *sync.RWMutex // mutex for modifiable params
 
-	Auth    AuthInterface    // read only
-	ServeWS ServeWSInterface // read only
+	AuthVerify AuthVerifyInterface // read only
+	ServeWS    ServeWSInterface    // read only
 
 	AuthBearer     string // read only
 	AuthPublicKey  string // read only
@@ -115,15 +115,15 @@ func (c *HContext) GetIsLive() bool {
 }
 
 func (c *HContext) HasAuth() bool {
-	return c.Auth != nil
+	return c.AuthVerify != nil
 }
 
 func (c *HContext) HasWSServer() bool {
 	return c.ServeWS != nil
 }
 
-//func (c *HContext) SetWebSocketUID(webSocketAuth interfaces.AuthInterface)  {
-//	c.AuthInterface = webSocketAuth
+//func (c *HContext) SetWebSocketUID(webSocketAuth interfaces.AuthVerifyInterface)  {
+//	c.AuthVerifyInterface = webSocketAuth
 //}
 
 func (c *HContext) AddUser(uid string, sid int) {

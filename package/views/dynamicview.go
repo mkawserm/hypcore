@@ -27,12 +27,12 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 
 		} else {
-			uid, ok = dView.Context.Auth.GetUID([]byte(h), dView.Context.AuthBearer)
+			uid, ok = dView.Context.AuthVerify.GetUID([]byte(h), dView.Context.AuthBearer)
 		}
 
 		if ok {
 			if uid == "" {
-				GraphQLErrorMessage(w, []byte("Oops! No UID found from AuthInterface !!!"),
+				GraphQLErrorMessage(w, []byte("Oops! No UID found from AuthVerifyInterface !!!"),
 					mcodes.NoUIDFromAuthInterface, 400)
 				return
 			}

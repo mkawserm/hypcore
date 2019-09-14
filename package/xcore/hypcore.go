@@ -44,7 +44,7 @@ type HypCoreConfig struct {
 	AuthSecretKey  string
 	AuthAlgorithm  string
 
-	Auth                core2.AuthInterface
+	AuthVerify          core2.AuthVerifyInterface
 	ServeWS             core2.ServeWSInterface
 	OnlineUserDataStore core2.OnlineUserDataStoreInterface
 	StorageEngine       core2.StorageInterface
@@ -57,15 +57,15 @@ func init() {
 
 //Create new HypCore server
 func NewHypCore(hc *HypCoreConfig) *HypCore {
-	if hc.Auth != nil && hc.OnlineUserDataStore == nil {
-		glog.Fatal("Auth found but no OnlineUserDataStore found. Please configure OnlineUserDataStore.")
+	if hc.AuthVerify != nil && hc.OnlineUserDataStore == nil {
+		glog.Fatal("AuthVerify found but no OnlineUserDataStore found. Please configure OnlineUserDataStore.")
 		return nil
 
-	} else if hc.Auth == nil && hc.OnlineUserDataStore != nil {
-		glog.Fatal("OnlineUserDataStore found but no Auth found. Please configure Auth.")
+	} else if hc.AuthVerify == nil && hc.OnlineUserDataStore != nil {
+		glog.Fatal("OnlineUserDataStore found but no AuthVerify found. Please configure AuthVerify.")
 		return nil
 
-	} else if hc.Auth != nil && hc.OnlineUserDataStore != nil {
+	} else if hc.AuthVerify != nil && hc.OnlineUserDataStore != nil {
 		if hc.AuthBearer == "" {
 			glog.Fatal("AuthBearer is required but not provided")
 			return nil
@@ -130,7 +130,7 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 
 		IsLive: true,
 
-		Auth:                hc.Auth,
+		AuthVerify:          hc.AuthVerify,
 		ServeWS:             hc.ServeWS,
 		OnlineUserDataStore: hc.OnlineUserDataStore,
 
@@ -253,12 +253,12 @@ func (h *HypCore) Setup() {
 		Query: graphql.NewObject(graphql.ObjectConfig{
 			Name:        "Query",
 			Fields:      h.context.AuthQueryFields,
-			Description: "Auth Query",
+			Description: "AuthVerify Query",
 		}),
 		Mutation: graphql.NewObject(graphql.ObjectConfig{
 			Name:        "Mutation",
 			Fields:      h.context.AuthMutationFields,
-			Description: "Auth Mutation",
+			Description: "AuthVerify Mutation",
 		}),
 	})
 
