@@ -104,6 +104,12 @@
   revision = "bb615f61ce85790a1667efc145c66e917cce1a39"
 
 [[projects]]
+  name = "github.com/pascaldekloe/jwt"
+  packages = ["."]
+  revision = "4ed8d962b21e1c77283cadf661d4d1adacd64888"
+  version = "v1.6.0"
+
+[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "728039f679cbcd4f6a54e080d2219a4c4928c546"
@@ -190,6 +196,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "02a73520e21dc279acf4066459ffd7b66d399f9360f3aa8dafba0346b8b01a53"
+  inputs-digest = "cf4dd04d90b12044f5ed8789e74b5fac5cd39dd3f504814773ecee05a0f4b9d7"
   solver-name = "gps-cdcl"
   solver-version = 1
