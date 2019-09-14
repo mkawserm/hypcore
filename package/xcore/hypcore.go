@@ -1,17 +1,27 @@
 package xcore
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/rsa"
+)
+
+import (
 	"flag"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/models"
 	"github.com/mkawserm/hypcore/package/views"
 	xdb2 "github.com/mkawserm/hypcore/package/xdb"
+	"github.com/pascaldekloe/jwt"
 	"net/http"
 	"runtime"
+	"strings"
 	"sync"
 	"syscall"
+	"time"
 )
 
 type HypCore struct {
@@ -44,10 +54,10 @@ type HypCoreConfig struct {
 	AuthSecretKey  string
 	AuthAlgorithm  string
 
-	AuthTokenDefaultTimeout      uint32
-	AuthTokenSuperGroupTimeout   uint32
-	AuthTokenServiceGroupTimeout uint32
-	AuthTokenNormalGroupTimeout  uint32
+	AuthTokenDefaultTimeout      int64
+	AuthTokenSuperGroupTimeout   int64
+	AuthTokenServiceGroupTimeout int64
+	AuthTokenNormalGroupTimeout  int64
 
 	AuthVerify          core2.AuthVerifyInterface
 	ServeWS             core2.ServeWSInterface
@@ -279,6 +289,147 @@ func (h *HypCore) Setup() {
 	})
 
 	h.context.GraphQLSchema = schema
+
+	h.context.AddAuthMutationField("token", &graphql.Field{
+		Type: graphql.String,
+		Args: graphql.FieldConfigArgument{
+			"username": &graphql.ArgumentConfig{
+				Type: graphql.NewNonNull(graphql.String),
+			},
+			"password": &graphql.ArgumentConfig{
+				Type: graphql.NewNonNull(graphql.String),
+			},
+		},
+		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			username := params.Args["username"].(string)
+			password := params.Args["username"].(string)
+
+			user := &models.User{Pk: username}
+
+			if h.context.GetObject(user) {
+				if user.IsPasswordValid(password) {
+					claims := jwt.Claims{}
+					claims.Subject = username
+					claims.Set["group"] = user.GetGroup()
+					claims.Set["uid"] = username
+
+					now := time.Now().Round(time.Second)
+					claims.Issued = jwt.NewNumericTime(now)
+
+					if user.IsSuperUser() {
+						claims.Expires = jwt.NewNumericTime(now.Add(time.Duration(h.context.AuthTokenSuperGroupTimeout)))
+					} else if user.IsServiceUser() {
+						claims.Expires = jwt.NewNumericTime(now.Add(time.Duration(h.context.AuthTokenServiceGroupTimeout)))
+					} else if user.IsNormalUser() {
+						claims.Expires = jwt.NewNumericTime(now.Add(time.Duration(h.context.AuthTokenNormalGroupTimeout)))
+					}
+
+					if strings.HasPrefix(h.context.AuthAlgorithm, "HS") {
+						token, err := claims.HMACSign(h.context.AuthAlgorithm, []byte(h.context.AuthSecretKey))
+						if err == nil {
+							return string(token), nil
+						} else {
+							glog.Errorf("HS Token generation error: %s\n", err.Error())
+						}
+					} else if strings.HasPrefix(h.context.AuthAlgorithm, "EdDSA") {
+						var privateKey ed25519.PrivateKey
+
+						key, err1 := core2.LoadPrivateKey([]byte(h.context.AuthPrivateKey))
+						if err1 != nil {
+							glog.Errorf("EdDSA Token generation error: %s\n", err1.Error())
+							return "", nil
+						}
+
+						switch t := key.(type) {
+						case ed25519.PrivateKey:
+							privateKey = t
+						default:
+							glog.Errorf("EdDSA invalid PrivateKey\n")
+							return "", nil
+						}
+
+						token, err := claims.EdDSASign(privateKey)
+						if err == nil {
+							return string(token), nil
+						} else {
+							glog.Errorf("EdDSA Token generation error: %s\n", err.Error())
+						}
+					} else if strings.HasPrefix(h.context.AuthAlgorithm, "ES") {
+						var privateKey *ecdsa.PrivateKey
+						key, err1 := core2.LoadPrivateKey([]byte(h.context.AuthPrivateKey))
+						if err1 != nil {
+							glog.Errorf("ES Token generation error: %s\n", err1.Error())
+							return "", nil
+						}
+
+						switch t := key.(type) {
+						case *ecdsa.PrivateKey:
+							privateKey = t
+						default:
+							glog.Errorf("ECDSA invalid PrivateKey\n")
+							return "", nil
+						}
+
+						token, err := claims.ECDSASign(h.context.AuthAlgorithm, privateKey)
+						if err == nil {
+							return string(token), nil
+						} else {
+							glog.Errorf("ES Token generation error: %s\n", err.Error())
+						}
+					} else if strings.HasPrefix(h.context.AuthAlgorithm, "RS") {
+						var privateKey *rsa.PrivateKey
+
+						key, err1 := core2.LoadPrivateKey([]byte(h.context.AuthPrivateKey))
+						if err1 != nil {
+							glog.Errorf("RS Token generation error: %s\n", err1.Error())
+							return "", nil
+						}
+
+						switch t := key.(type) {
+						case *rsa.PrivateKey:
+							privateKey = t
+						default:
+							glog.Errorf("RS invalid PrivateKey\n")
+							return "", nil
+						}
+
+						token, err := claims.RSASign(h.context.AuthAlgorithm, privateKey)
+						if err == nil {
+							return string(token), nil
+						} else {
+							glog.Errorf("ES Token generation error: %s\n", err.Error())
+						}
+					} else if strings.HasPrefix(h.context.AuthAlgorithm, "PS") {
+						var privateKey *rsa.PrivateKey
+
+						key, err1 := core2.LoadPrivateKey([]byte(h.context.AuthPrivateKey))
+						if err1 != nil {
+							glog.Errorf("PS Token generation error: %s\n", err1.Error())
+							return "", nil
+						}
+
+						switch t := key.(type) {
+						case *rsa.PrivateKey:
+							privateKey = t
+						default:
+							glog.Errorf("PS invalid PrivateKey\n")
+							return "", nil
+						}
+
+						token, err := claims.RSASign(h.context.AuthAlgorithm, privateKey)
+						if err == nil {
+							return string(token), nil
+						} else {
+							glog.Errorf("PS Token generation error: %s\n", err.Error())
+						}
+					}
+				}
+			}
+
+			return "", nil
+		},
+		Description: "Generate JWT token",
+	})
 
 	authSchema, _ := graphql.NewSchema(graphql.SchemaConfig{
 		Query: graphql.NewObject(graphql.ObjectConfig{

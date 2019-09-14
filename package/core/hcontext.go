@@ -38,10 +38,10 @@ type HContext struct {
 	AuthSecretKey  string // read only
 	AuthAlgorithm  string // read only
 
-	AuthTokenDefaultTimeout      uint32 // seconds
-	AuthTokenSuperGroupTimeout   uint32 // seconds
-	AuthTokenServiceGroupTimeout uint32 // seconds
-	AuthTokenNormalGroupTimeout  uint32 // seconds
+	AuthTokenDefaultTimeout      int64 // seconds
+	AuthTokenSuperGroupTimeout   int64 // seconds
+	AuthTokenServiceGroupTimeout int64 // seconds
+	AuthTokenNormalGroupTimeout  int64 // seconds
 
 	OnlineUserDataStore OnlineUserDataStoreInterface // read only
 

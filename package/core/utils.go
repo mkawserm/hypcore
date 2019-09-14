@@ -1,6 +1,9 @@
 package core
 
 import (
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"github.com/gobwas/httphead"
 	"reflect"
 	"unsafe"
@@ -109,4 +112,27 @@ func GetPk(obj interface{}) string {
 	}
 
 	return ""
+}
+
+func LoadPrivateKey(data []byte) (interface{}, error) {
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, errors.New("Invalid pem block")
+	}
+
+	switch block.Type {
+	case "PRIVATE KEY":
+		key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		return key, err
+
+	case "EC PRIVATE KEY":
+		key, err := x509.ParseECPrivateKey(block.Bytes)
+		return key, err
+
+	case "RSA PRIVATE KEY":
+		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		return key, err
+	}
+
+	return nil, errors.New("Failed to load private key")
 }
