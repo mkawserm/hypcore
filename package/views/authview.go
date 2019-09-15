@@ -7,6 +7,7 @@ import (
 	core2 "github.com/mkawserm/hypcore/package/core"
 	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
+	"github.com/mkawserm/hypcore/package/variants"
 	"io/ioutil"
 	"net/http"
 )
@@ -42,9 +43,9 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query, variables, err := core2.ParseGraphQLData(bodyBytes)
+	ro := variants.ParseGraphQLQuery(bodyBytes)
 
-	if err != nil {
+	if ro == nil {
 		errorType := &gqltypes.ErrorType{Group: mcodes.AuthGroupCode}
 		errorType.Code = mcodes.AuthRequestBodyParseError
 		errorType.MessageType = "GraphQueryException"
@@ -52,8 +53,6 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		errorType.Messages = append(errorType.Messages,
 			map[string]string{"message": "Oops! Failed to read request body !!!"})
-		errorType.Messages = append(errorType.Messages,
-			map[string]string{"message": err.Error()})
 
 		GraphQLSmartErrorMessage(w, errorType, 400)
 		return
@@ -63,8 +62,9 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	params = graphql.Params{
 		Schema:         authView.Context.AuthSchema,
-		RequestString:  query,
-		VariableValues: variables,
+		RequestString:  ro.Query,
+		VariableValues: ro.Variables,
+		OperationName:  ro.OperationName,
 	}
 
 	res := graphql.Do(params)
