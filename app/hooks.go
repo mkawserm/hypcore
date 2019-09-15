@@ -11,6 +11,10 @@ var IsConfigurationOkHook = func(v *viper.Viper, silent bool, logToGlog bool) bo
 	return true
 }
 
+var DefaultConfigurationOkHook = func(v *viper.Viper) {
+
+}
+
 var AuthVerifyHook = func() core.AuthVerifyInterface {
 	return &core.AuthVerify{}
 }

@@ -71,5 +71,7 @@ func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
 	v.SetDefault("auth.tokenNormalGroupTimeout", 5*60)
 	v.SetDefault("auth.tokenServiceGroupTimeout", 5*60)
 
+	DefaultConfigurationOkHook(v)
+
 	return v
 }
