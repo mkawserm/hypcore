@@ -185,7 +185,7 @@
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
-  revision = "0240832f5c3d9ddcdcd51c66edbf8cd889a54108"
+  revision = "31e00f45c22e7b8b4b5a004fd8a01c664f7b175b"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
