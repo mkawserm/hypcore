@@ -2,6 +2,7 @@ package core
 
 import (
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"github.com/gobwas/httphead"
@@ -135,4 +136,33 @@ func LoadPrivateKey(data []byte) (interface{}, error) {
 	}
 
 	return nil, errors.New("Failed to load private key")
+}
+
+func ParseGraphQLData(gqlData []byte) (string, map[string]interface{}, error) {
+	query := ""
+	variables := make(map[string]interface{})
+
+	var queryMap map[string]interface{}
+
+	err := json.Unmarshal(gqlData, &queryMap)
+	if err == nil {
+		if q, ok := queryMap["query"]; ok {
+			query = q.(string)
+		} else {
+			return "", variables, errors.New("no query key found")
+		}
+
+		if v, ok := queryMap["variables"]; ok {
+			variables = v.(map[string]interface{})
+		}
+
+	} else {
+		return "", nil, err
+	}
+
+	if query == "" {
+		return "", nil, errors.New("empty graphql query string")
+	} else {
+		return query, variables, nil
+	}
 }

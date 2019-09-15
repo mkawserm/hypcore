@@ -31,10 +31,21 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	query, variables, err := core2.ParseGraphQLData(bodyBytes)
+
+	if err != nil {
+		GraphQLErrorMessage(w, []byte("Oops! Failed to parse request body !!!"),
+			mcodes.FailedToReadRequestBody, 400)
+		return
+	}
+
 	var params graphql.Params
 
-	params = graphql.Params{Schema: authView.Context.AuthSchema,
-		RequestString: string(bodyBytes)}
+	params = graphql.Params{
+		Schema:         authView.Context.AuthSchema,
+		RequestString:  query,
+		VariableValues: variables,
+	}
 
 	res := graphql.Do(params)
 	if len(res.Errors) > 0 {

@@ -72,7 +72,7 @@ func (h *PBKDF2Hasher) Verify(password string, encoded string) (bool, error) {
 	}
 
 	i, err := strconv.Atoi(iterations)
-	fmt.Println(i)
+	//fmt.Println(i)
 
 	if err != nil {
 		return false, ErrHashComponentUnreadable
