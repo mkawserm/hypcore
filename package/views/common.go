@@ -1,6 +1,7 @@
 package views
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -72,4 +73,22 @@ func GraphQLErrorMessage(w http.ResponseWriter, msg []byte, error_code string, c
 	w.Header().Set("Content-Length", strconv.Itoa(len(output)))
 
 	_, _ = w.Write([]byte(output))
+}
+
+func GraphQLSmartErrorMessage(w http.ResponseWriter, msg interface{}, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+
+	messageFormat := `{"error":%s}`
+	message, err := json.Marshal(msg)
+
+	if err == nil {
+		output := fmt.Sprintf(messageFormat, message)
+		w.Header().Set("Content-Length", strconv.Itoa(len(output)))
+		_, _ = w.Write([]byte(output))
+	} else {
+		output := `{"error":""}`
+		w.Header().Set("Content-Length", strconv.Itoa(len(output)))
+		_, _ = w.Write([]byte(output))
+	}
 }

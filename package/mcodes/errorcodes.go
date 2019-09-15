@@ -1,5 +1,11 @@
 package mcodes
 
+const AuthGroupCode = 100
+const AuthQueryMustBeUsingPostRequest = 1001
+const AuthRequestBodyReadError = 1002
+const AuthRequestBodyParseError = 1003
+const AuthGraphQLExecutionError = 1004
+
 const NoAuthorizationHeaderFound = "HCNAHF400"
 const NoUIDFromAuthVerifyInterface = "HCNUFAVI400"
 const InvalidAuthorizationData = "HCIAD400"

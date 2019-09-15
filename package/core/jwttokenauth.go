@@ -61,7 +61,7 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 							glog.Errorf("HS Token generation error: %s\n", err.Error())
 							return gqltypes.Token{Token: ""}, errors.New("failed to generate token")
 						} else {
-							return gqltypes.Token{Token: string(token)}, errors.New("failed to generate token")
+							return gqltypes.Token{Token: string(token)}, nil
 						}
 					} else if strings.HasPrefix(ctx.AuthAlgorithm, "EdDSA") {
 						var privateKey ed25519.PrivateKey
