@@ -79,7 +79,7 @@ func GraphQLSmartErrorMessage(w http.ResponseWriter, msg interface{}, code int) 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
-	messageFormat := `{"error":%s}`
+	messageFormat := `{"data":null,"error":%s}`
 	message, err := json.Marshal(msg)
 
 	if err == nil {
@@ -87,7 +87,7 @@ func GraphQLSmartErrorMessage(w http.ResponseWriter, msg interface{}, code int) 
 		w.Header().Set("Content-Length", strconv.Itoa(len(output)))
 		_, _ = w.Write([]byte(output))
 	} else {
-		output := `{"error":""}`
+		output := `{"data":null,"error":""}`
 		w.Header().Set("Content-Length", strconv.Itoa(len(output)))
 		_, _ = w.Write([]byte(output))
 	}
