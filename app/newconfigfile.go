@@ -71,6 +71,15 @@ func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
 	v.SetDefault("auth.tokenNormalGroupTimeout", 5*60)
 	v.SetDefault("auth.tokenServiceGroupTimeout", 5*60)
 
+	v.SetDefault("cors.AllowAllOrigins", true)
+	v.SetDefault("cors.AllowCredentials", true)
+	v.SetDefault("cors.MaxAge", 0)
+
+	v.SetDefault("cors.AllowOrigins", []string{})
+	v.SetDefault("cors.AllowMethods", []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"})
+	v.SetDefault("cors.AllowHeaders", []string{})
+	v.SetDefault("cors.ExposeHeaders", []string{})
+
 	DefaultConfigurationOkHook(v)
 
 	return v

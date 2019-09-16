@@ -41,6 +41,15 @@ func PrepareServer(v *viper.Viper) *xcore.HypCore {
 		AuthTokenNormalGroupTimeout:  v.GetInt64("auth.tokenNormalGroupTimeout"),
 		AuthTokenServiceGroupTimeout: v.GetInt64("auth.tokenServiceGroupTimeout"),
 		AuthTokenSuperGroupTimeout:   v.GetInt64("auth.tokenSuperGroupTimeout"),
+
+		CORSAllowAllOrigins:  v.GetBool("cors.AllowAllOrigins"),
+		CORSAllowCredentials: v.GetBool("cors.AllowCredentials"),
+		CORSMaxAge:           v.GetDuration("cors.MaxAge"),
+
+		CORSAllowOrigins:  v.GetStringSlice("cors.AllowOrigins"),
+		CORSAllowMethods:  v.GetStringSlice("cors.AllowMethods"),
+		CORSAllowHeaders:  v.GetStringSlice("cors.AllowHeaders"),
+		CORSExposeHeaders: v.GetStringSlice("cors.ExposeHeaders"),
 	}
 
 	hypCore := xcore.NewHypCore(hcc)
