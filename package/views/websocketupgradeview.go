@@ -91,9 +91,9 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			if h == "" {
 				errorType := gqltypes.NewErrorType()
 				errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
-				errorType.Code = mcodes.GraphQLWSUpgradeNoAuthorizationHeaderFound
+				errorType.Code = mcodes.GraphQLWSUpgradeNoAuthorizationHeaderOrTokenUrlParameterFound
 				errorType.MessageType = "GraphQLWSUpgradeException"
-				errorType.AddStringMessage("Oops! No Authorization header found !!!")
+				errorType.AddStringMessage("Oops! No Authorization header or toke url parameter found !!!")
 				GraphQLSmartErrorMessage(w, errorType, 400)
 				return
 
