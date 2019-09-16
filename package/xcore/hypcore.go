@@ -392,7 +392,7 @@ func (h *HypCore) runMainEventLoop() {
 				break
 			}
 
-			if msg, _, err := wsutil.ReadClientData(conn); err != nil {
+			if msg, opCode, err := wsutil.ReadClientData(conn); err != nil {
 				if h.context.HasAuthVerify() {
 					h.context.RemoveUser(core2.WebsocketFileDescriptor(conn))
 				}
@@ -409,7 +409,7 @@ func (h *HypCore) runMainEventLoop() {
 
 				// Call Message Server to process the message
 				if h.context.ServeWS != nil {
-					h.context.ServeWS.ServeWS(h.context, core2.WebsocketFileDescriptor(conn), msg)
+					h.context.ServeWS.ServeWS(h.context, core2.WebsocketFileDescriptor(conn), msg, byte(opCode))
 				}
 			}
 		}

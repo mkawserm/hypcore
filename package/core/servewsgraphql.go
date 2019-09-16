@@ -14,7 +14,7 @@ import (
 type ServeWSGraphQL struct {
 }
 
-func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, message []byte) {
+func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, message []byte, opCode byte) {
 
 	ro := variants.ParseGraphQLQuery(message)
 	if ro == nil {

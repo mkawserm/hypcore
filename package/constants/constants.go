@@ -35,3 +35,12 @@ const WebSocketSecureConnection = 2
 
 const HTTPConnection = 3
 const HTTPSConnection = 4
+
+const (
+	WebSocketOpContinuation byte = 0x0
+	WebSocketOpText         byte = 0x1
+	WebSocketOpBinary       byte = 0x2
+	WebSocketOpClose        byte = 0x8
+	WebSocketOpPing         byte = 0x9
+	WebSocketOpPong         byte = 0xa
+)
