@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+	"time"
 )
 
 type HypCore struct {
@@ -56,6 +57,21 @@ type HypCoreConfig struct {
 	ServeWS             core2.ServeWSInterface
 	OnlineUserDataStore core2.OnlineUserDataStoreInterface
 	StorageEngine       core2.StorageInterface
+
+	// If set, all origins are allowed.
+	CORSAllowAllOrigins bool
+	// A list of allowed origins. Wild cards and FQDNs are supported.
+	CORSAllowOrigins []string
+	// If set, allows to share auth credentials such as cookies.
+	CORSAllowCredentials bool
+	// A list of allowed HTTP methods.
+	CORSAllowMethods []string
+	// A list of allowed HTTP headers.
+	CORSAllowHeaders []string
+	// A list of exposed HTTP headers.
+	CORSExposeHeaders []string
+	// Max age of the CORS headers.
+	CORSMaxAge time.Duration
 }
 
 func init() {
@@ -177,6 +193,29 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 	}
 
 	// NOTE: CORS related options
+	hContext.CORSOptions.AllowAllOrigins = hc.CORSAllowAllOrigins
+	hContext.CORSOptions.AllowCredentials = hc.CORSAllowCredentials
+	hContext.CORSOptions.AllowHeaders = make([]string, 0)
+	hContext.CORSOptions.AllowMethods = make([]string, 0)
+	hContext.CORSOptions.AllowOrigins = make([]string, 0)
+	hContext.CORSOptions.ExposeHeaders = make([]string, 0)
+	hContext.CORSOptions.MaxAge = hc.CORSMaxAge
+
+	if len(hc.CORSAllowHeaders) != 0 {
+		hContext.CORSOptions.AllowHeaders = hc.CORSAllowHeaders
+	}
+
+	if len(hc.CORSAllowMethods) != 0 {
+		hContext.CORSOptions.AllowMethods = hc.CORSAllowMethods
+	}
+
+	if len(hc.CORSAllowOrigins) != 0 {
+		hContext.CORSOptions.AllowOrigins = hc.CORSAllowOrigins
+	}
+
+	if len(hc.CORSExposeHeaders) != 0 {
+		hContext.CORSOptions.ExposeHeaders = hc.CORSExposeHeaders
+	}
 
 	// END
 
