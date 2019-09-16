@@ -5,6 +5,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
 )
@@ -18,32 +19,53 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	if r.URL.Path == string(wsu.Context.WebSocketUpgradePath) {
 
 		if r.Method != http.MethodGet {
-			GraphQLErrorMessage(w, []byte("Oops! WebSocket upgrade must be done using get request !!!"),
-				mcodes.WebSocketUpgradeBadRequestMethod, 400)
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+			errorType.Code = mcodes.GraphQLWSUpgradeRequestMethodError
+			errorType.MessageType = "GraphQLWSUpgradeException"
+			errorType.AddStringMessage("Oops! WebSocket upgrade must be done using get request !!!")
+			GraphQLSmartErrorMessage(w, errorType, 400)
 			return
 		}
 
 		if r.ProtoMajor < 1 || (r.ProtoMajor == 1 && r.ProtoMinor < 1) {
-			GraphQLErrorMessage(w, []byte("Oops! Bad protocol !!!"),
-				mcodes.WebSocketBadProtocol, 400)
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+			errorType.Code = mcodes.GraphQLWSUpgradeBadProtocol
+			errorType.MessageType = "GraphQLWSUpgradeException"
+			errorType.AddStringMessage("Oops! Bad protocol !!!")
+			GraphQLSmartErrorMessage(w, errorType, 400)
 			return
 		}
 
 		if r.Host == "" {
-			GraphQLErrorMessage(w, []byte("Oops! No Host found !!!"),
-				mcodes.WebSocketNoHostFound, 400)
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+			errorType.Code = mcodes.GraphQLWSUpgradeHostNotFound
+			errorType.MessageType = "GraphQLWSUpgradeException"
+			errorType.AddStringMessage("Oops! No Host found !!!")
+			GraphQLSmartErrorMessage(w, errorType, 400)
 			return
 		}
 
 		if u := httpGetHeader(r.Header, constants.HeaderUpgradeCanonical); u != "websocket" && !core2.StrEqualFold(u, "websocket") {
-			GraphQLErrorMessage(w, []byte("Oops! No Upgrade header found !!!"),
-				mcodes.WebSocketNoUpgradeHeaderFound, 400)
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+			errorType.Code = mcodes.GraphQLWSUpgradeNoUpgradeHeaderFound
+			errorType.MessageType = "GraphQLWSUpgradeException"
+			errorType.AddStringMessage("Oops! No Upgrade header found !!!")
+			GraphQLSmartErrorMessage(w, errorType, 400)
 			return
 		}
 
 		if c := httpGetHeader(r.Header, constants.HeaderConnectionCanonical); c != "Upgrade" && !core2.StrHasToken(c, "upgrade") {
-			GraphQLErrorMessage(w, []byte("Oops! No Connection header found !!!"),
-				mcodes.WebSocketNoConnectionHeaderFound, 400)
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+			errorType.Code = mcodes.GraphQLWSUpgradeNoConnectionHeaderFound
+			errorType.MessageType = "GraphQLWSUpgradeException"
+			errorType.AddStringMessage("Oops! No Connection header found !!!")
+			GraphQLSmartErrorMessage(w, errorType, 400)
+
 			return
 		}
 
@@ -55,8 +77,12 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			h := httpGetHeader(r.Header, constants.HeaderAuthorizationCanonical)
 
 			if h == "" {
-				GraphQLErrorMessage(w, []byte("Oops! No Authorization header found !!!"),
-					mcodes.NoAuthorizationHeaderFound, 400)
+				errorType := gqltypes.NewErrorType()
+				errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+				errorType.Code = mcodes.GraphQLWSUpgradeNoAuthorizationHeaderFound
+				errorType.MessageType = "GraphQLWSUpgradeException"
+				errorType.AddStringMessage("Oops! No Authorization header found !!!")
+				GraphQLSmartErrorMessage(w, errorType, 400)
 				return
 
 			} else {
@@ -79,8 +105,12 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 			if ok {
 				if uid == "" {
-					GraphQLErrorMessage(w, []byte("Oops! No UID found from AuthVerifyInterface !!!"),
-						mcodes.NoUIDFromAuthVerifyInterface, 400)
+					errorType := gqltypes.NewErrorType()
+					errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+					errorType.Code = mcodes.GraphQLWSUpgradeNoUIDFoundFromToken
+					errorType.MessageType = "GraphQLWSUpgradeException"
+					errorType.AddStringMessage("Oops! No UID found from AuthVerifyInterface !!!")
+					GraphQLSmartErrorMessage(w, errorType, 400)
 					return
 				}
 
@@ -101,8 +131,12 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				}
 
 			} else { // Failed to authorize. not ok
-				GraphQLErrorMessage(w, []byte("Oops! Invalid Authorization data !!!"),
-					mcodes.InvalidAuthorizationData, 400)
+				errorType := gqltypes.NewErrorType()
+				errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+				errorType.Code = mcodes.GraphQLWSUpgradeInvalidAuthorizationData
+				errorType.MessageType = "GraphQLWSUpgradeException"
+				errorType.AddStringMessage("Oops! Invalid Authorization data !!!")
+				GraphQLSmartErrorMessage(w, errorType, 400)
 			}
 
 		} else { // No AuthVerifyInterface. So just upgrade connection
@@ -122,6 +156,11 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		} // End of No AuthVerifyInterface
 
 	} else { // r.URL.Path != "/ws"
-		GraphQLErrorMessage(w, []byte("Oops!!!"), mcodes.HttpNotFound, 404)
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
+		errorType.Code = mcodes.GraphQLWSUpgradePathNotFound
+		errorType.MessageType = "GraphQLWSUpgradeException"
+		errorType.AddStringMessage("Oops!!!")
+		GraphQLSmartErrorMessage(w, errorType, 404)
 	}
 }
