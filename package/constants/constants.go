@@ -8,7 +8,7 @@ var (
 	headerConnection    = "Connection"
 	headerAuthorization = "Authorization"
 	//headerSecVersion    = "Sec-WebSocket-Version"
-	//headerSecProtocol   = "Sec-WebSocket-Protocol"
+	headerSecProtocol = "Sec-WebSocket-Protocol"
 	//headerSecExtensions = "Sec-WebSocket-Extensions"
 	//headerSecKey        = "Sec-WebSocket-Key"
 	//headerSecAccept     = "Sec-WebSocket-Accept"
@@ -18,7 +18,7 @@ var (
 	HeaderConnectionCanonical    = textproto.CanonicalMIMEHeaderKey(headerConnection)
 	HeaderAuthorizationCanonical = textproto.CanonicalMIMEHeaderKey(headerAuthorization)
 	//headerSecVersionCanonical    = textproto.CanonicalMIMEHeaderKey(headerSecVersion)
-	//headerSecProtocolCanonical   = textproto.CanonicalMIMEHeaderKey(headerSecProtocol)
+	HeaderSecProtocolCanonical = textproto.CanonicalMIMEHeaderKey(headerSecProtocol)
 	//headerSecExtensionsCanonical = textproto.CanonicalMIMEHeaderKey(headerSecExtensions)
 	//headerSecKeyCanonical        = textproto.CanonicalMIMEHeaderKey(headerSecKey)
 	//headerSecAcceptCanonical     = textproto.CanonicalMIMEHeaderKey(headerSecAccept)

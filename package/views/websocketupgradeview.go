@@ -82,6 +82,13 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			h := httpGetHeader(r.Header, constants.HeaderAuthorizationCanonical)
 
 			if h == "" {
+				h = httpGetHeader(r.Header, constants.HeaderSecProtocolCanonical)
+				if h != "" {
+					h = wsu.Context.AuthBearer + " " + h
+				}
+			}
+
+			if h == "" {
 				h = r.URL.Query().Get("token")
 				if h != "" {
 					h = wsu.Context.AuthBearer + " " + h
