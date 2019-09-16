@@ -16,7 +16,7 @@ import (
 
 func JWTTokenVerify(ctx *HContext) *graphql.Field {
 	return &graphql.Field{
-		Type:        graphql.Boolean,
+		Type:        gqltypes.TokenPayloadType,
 		Description: "Verify JWT token",
 		Args: graphql.FieldConfigArgument{
 			"token": &graphql.ArgumentConfig{
@@ -25,7 +25,15 @@ func JWTTokenVerify(ctx *HContext) *graphql.Field {
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 			glog.Infoln("JWTTokenVerify")
-			return false, nil
+			token := params.Args["token"].(string)
+
+			v, ok := VerifyJWT([]byte(token),
+				[]byte(ctx.AuthPublicKey),
+				[]byte(ctx.AuthSecretKey),
+				ctx.AuthBearer,
+				true, true)
+
+			return gqltypes.TokenPayload{IsValid: ok, Payload: v}, nil
 		},
 	}
 }
@@ -58,18 +66,24 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 					claims.Subject = username
 					claims.Set["group"] = user.GetGroup()
 					claims.Set["uid"] = username
+					claims.Issuer = ctx.AuthIssuer
+					claims.Audiences = ctx.AuthAudiences
 
 					now := time.Now().Round(time.Second)
 					claims.Issued = jwt.NewNumericTime(now)
 
 					if user.IsSuperUser() {
-						claims.Expires = jwt.NewNumericTime(now.Add(time.Duration(ctx.AuthTokenSuperGroupTimeout)))
+						claims.Expires = jwt.NewNumericTime(
+							now.Add(time.Duration(ctx.AuthTokenSuperGroupTimeout) * time.Second))
 					} else if user.IsServiceUser() {
-						claims.Expires = jwt.NewNumericTime(now.Add(time.Duration(ctx.AuthTokenServiceGroupTimeout)))
+						claims.Expires = jwt.NewNumericTime(
+							now.Add(time.Duration(ctx.AuthTokenServiceGroupTimeout) * time.Second))
 					} else if user.IsNormalUser() {
-						claims.Expires = jwt.NewNumericTime(now.Add(time.Duration(ctx.AuthTokenNormalGroupTimeout)))
+						claims.Expires = jwt.NewNumericTime(
+							now.Add(time.Duration(ctx.AuthTokenNormalGroupTimeout) * time.Second))
 					} else {
-						claims.Expires = jwt.NewNumericTime(now.Add(time.Duration(ctx.AuthTokenDefaultTimeout)))
+						claims.Expires = jwt.NewNumericTime(
+							now.Add(time.Duration(ctx.AuthTokenDefaultTimeout) * time.Second))
 					}
 
 					if strings.HasPrefix(ctx.AuthAlgorithm, "HS") {

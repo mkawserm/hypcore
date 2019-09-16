@@ -7,7 +7,8 @@ var TokenType = graphql.NewObject(graphql.ObjectConfig{
 	Description: "JSON Web Token",
 	Fields: graphql.Fields{
 		"token": &graphql.Field{
-			Type: graphql.String,
+			Type:        graphql.NewNonNull(graphql.String),
+			Description: "JWT encoded string",
 		},
 	},
 })

@@ -43,6 +43,8 @@ type HypCoreConfig struct {
 	AuthPrivateKey string
 	AuthSecretKey  string
 	AuthAlgorithm  string
+	AuthIssuer     string
+	AuthAudiences  []string
 
 	AuthTokenDefaultTimeout      int64
 	AuthTokenSuperGroupTimeout   int64
@@ -162,6 +164,8 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		AuthAlgorithm:  hc.AuthAlgorithm,
 		AuthSecretKey:  hc.AuthSecretKey,
 		AuthPrivateKey: hc.AuthPrivateKey,
+		AuthIssuer:     hc.AuthIssuer,
+		AuthAudiences:  hc.AuthAudiences,
 
 		AuthTokenDefaultTimeout:      hc.AuthTokenDefaultTimeout,
 		AuthTokenSuperGroupTimeout:   hc.AuthTokenSuperGroupTimeout,
@@ -220,6 +224,20 @@ func (h *HypCore) Setup() {
 	if h.context.AuthTokenServiceGroupTimeout == 0 {
 		h.context.AuthTokenServiceGroupTimeout = h.context.AuthTokenDefaultTimeout
 	}
+
+	if h.context.AuthIssuer == "" {
+		h.context.AuthIssuer = "HypCore"
+	}
+
+	if h.context.AuthAudiences == nil {
+		h.context.AuthAudiences = []string{"HypCore", "Hypnos", "Hypnosis"}
+	}
+
+	glog.Infof("Auth Issuer : %s\n", h.context.AuthIssuer)
+	glog.Infof("Auth Token Default Timeout: %d seconds\n", h.context.AuthTokenDefaultTimeout)
+	glog.Infof("Auth Token Super Group Timeout: %d seconds\n", h.context.AuthTokenSuperGroupTimeout)
+	glog.Infof("Auth Token Normal Group Timeout: %d seconds\n", h.context.AuthTokenNormalGroupTimeout)
+	glog.Infof("Auth Token Service Group Timeout: %d seconds\n ", h.context.AuthTokenServiceGroupTimeout)
 
 	if h.context.StorageEngine == nil {
 		h.context.StorageEngine = &xdb2.StorageEngine{}
@@ -280,8 +298,8 @@ func (h *HypCore) Setup() {
 
 	h.context.GraphQLSchema = schema
 
-	h.context.AddAuthQueryField("tokenVerify", core2.JWTTokenVerify(h.context))
-	h.context.AddAuthMutationField("tokenAuth", core2.JWTTokenAuth(h.context))
+	h.context.AddAuthQueryField("verifyToken", core2.JWTTokenVerify(h.context))
+	h.context.AddAuthMutationField("auth", core2.JWTTokenAuth(h.context))
 
 	authSchema, _ := graphql.NewSchema(graphql.SchemaConfig{
 		Query: graphql.NewObject(graphql.ObjectConfig{

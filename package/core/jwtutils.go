@@ -61,7 +61,13 @@ func tokenFromHeader(auth []byte, bearer string) []byte {
 	return []byte(strings.TrimPrefix(string(auth), trimmed_bearer+" "))
 }
 
-func VerifyJWT(token []byte, authPublicKey []byte, authSecretKey []byte, authBearer string, logToGlog bool) (map[string]interface{}, bool) {
+func VerifyJWT(token []byte,
+	authPublicKey []byte,
+	authSecretKey []byte,
+	authBearer string,
+	plainToken bool,
+	logToGlog bool) (map[string]interface{}, bool) {
+
 	keys := jwt.KeyRegister{}
 	if !IsHMACAlg(token) {
 		_, err := keys.LoadPEM([]byte(authPublicKey), []byte(""))
@@ -76,12 +82,20 @@ func VerifyJWT(token []byte, authPublicKey []byte, authSecretKey []byte, authBea
 		keys.Secrets = append(keys.Secrets, []byte(authSecretKey))
 	}
 
-	claims, err2 := keys.Check(tokenFromHeader(token, authBearer))
+	var claims *jwt.Claims
+	var err2 error
+
+	if plainToken {
+		claims, err2 = keys.Check(token)
+	} else {
+		claims, err2 = keys.Check(tokenFromHeader(token, authBearer))
+	}
 
 	if err2 == nil {
+		// glog.Infoln(string(claims.Raw))
 		if claims.Valid(time.Now()) {
 			data := make(map[string]interface{})
-			err3 := json.Unmarshal(claims.Raw, data)
+			err3 := json.Unmarshal(claims.Raw, &data)
 			if err3 == nil {
 				return data, true
 			} else {

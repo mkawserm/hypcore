@@ -32,11 +32,13 @@ type HContext struct {
 	AuthVerify AuthVerifyInterface // read only
 	ServeWS    ServeWSInterface    // read only
 
-	AuthBearer     string // read only
-	AuthPublicKey  string // read only
-	AuthPrivateKey string // read only
-	AuthSecretKey  string // read only
-	AuthAlgorithm  string // read only
+	AuthBearer     string   // read only
+	AuthPublicKey  string   // read only
+	AuthPrivateKey string   // read only
+	AuthSecretKey  string   // read only
+	AuthAlgorithm  string   // read only
+	AuthIssuer     string   // read only
+	AuthAudiences  []string // read only
 
 	AuthTokenDefaultTimeout      int64 // seconds
 	AuthTokenSuperGroupTimeout   int64 // seconds
