@@ -82,6 +82,13 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			h := httpGetHeader(r.Header, constants.HeaderAuthorizationCanonical)
 
 			if h == "" {
+				h = r.URL.Query().Get("token")
+				if h != "" {
+					h = wsu.Context.AuthBearer + " " + h
+				}
+			}
+
+			if h == "" {
 				errorType := gqltypes.NewErrorType()
 				errorType.Group = mcodes.GraphQLWSUpgradeGroupCode
 				errorType.Code = mcodes.GraphQLWSUpgradeNoAuthorizationHeaderFound
