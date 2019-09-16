@@ -33,3 +33,9 @@ const GraphQLWSUpgradeNoAuthorizationHeaderFound = 6
 const GraphQLWSUpgradeNoUIDFoundFromToken = 7
 const GraphQLWSUpgradeInvalidAuthorizationData = 8
 const GraphQLWSUpgradePathNotFound = 9
+
+const DynamicViewGroupCode = 5
+const DynamicViewNoAuthorizationHeaderFound = 1
+const DynamicViewNoUIDFoundFromToken = 2
+const DynamicViewInvalidAuthorizationData = 3
+const DynamicViewPathNotFound = 4

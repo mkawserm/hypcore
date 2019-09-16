@@ -4,6 +4,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
 	"regexp"
@@ -23,10 +24,14 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		h := httpGetHeader(r.Header, constants.HeaderAuthorizationCanonical)
 		if h == "" {
-			GraphQLErrorMessage(w, []byte("Oops! No Authorization header found !!!"),
-				mcodes.NoAuthorizationHeaderFound, 400)
-			return
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.DynamicViewGroupCode
+			errorType.Code = mcodes.DynamicViewNoAuthorizationHeaderFound
+			errorType.MessageType = "DynamicViewException"
+			errorType.AddStringMessage("Oops! No Authorization header found !!!")
+			GraphQLSmartErrorMessage(w, errorType, 400)
 
+			return
 		} else {
 			var dataMap map[string]interface{}
 
@@ -44,14 +49,22 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if ok {
 			if uid == "" {
-				GraphQLErrorMessage(w, []byte("Oops! No UID found from AuthVerifyInterface !!!"),
-					mcodes.NoUIDFromAuthVerifyInterface, 400)
+				errorType := gqltypes.NewErrorType()
+				errorType.Group = mcodes.DynamicViewGroupCode
+				errorType.Code = mcodes.DynamicViewNoUIDFoundFromToken
+				errorType.MessageType = "DynamicViewException"
+				errorType.AddStringMessage("Oops! No UID found from AuthVerifyInterface !!!")
+				GraphQLSmartErrorMessage(w, errorType, 400)
 				return
 			}
 
 		} else { // Failed to authorize. not ok
-			GraphQLErrorMessage(w, []byte("Oops! Invalid Authorization data !!!"),
-				mcodes.InvalidAuthorizationData, 400)
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.DynamicViewGroupCode
+			errorType.Code = mcodes.DynamicViewInvalidAuthorizationData
+			errorType.MessageType = "DynamicViewException"
+			errorType.AddStringMessage("Oops! Invalid Authorization data !!!")
+			GraphQLSmartErrorMessage(w, errorType, 400)
 			return
 		}
 	}
@@ -77,5 +90,10 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("Dynamic route dispatch failed to find a route.")
 	glog.Errorln("Showing 404 Http Error")
 
-	GraphQLErrorMessage(w, []byte("Oops!!!"), mcodes.HttpNotFound, 404)
+	errorType := gqltypes.NewErrorType()
+	errorType.Group = mcodes.DynamicViewGroupCode
+	errorType.Code = mcodes.DynamicViewPathNotFound
+	errorType.MessageType = "DynamicViewException"
+	errorType.AddStringMessage("Oops!!!")
+	GraphQLSmartErrorMessage(w, errorType, 404)
 }
