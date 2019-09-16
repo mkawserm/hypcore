@@ -7,6 +7,7 @@ import (
 	"github.com/graphql-go/graphql"
 	core2 "github.com/mkawserm/hypcore/package/core"
 	"github.com/mkawserm/hypcore/package/cors"
+	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/views"
 	xdb2 "github.com/mkawserm/hypcore/package/xdb"
 	"net/http"
@@ -306,13 +307,25 @@ func (h *HypCore) Setup() {
 		Description: "Check if the service is live",
 	})
 
-	h.AddGraphQLQueryField("totalActiveWebSocketConnections", &graphql.Field{
-		Type: graphql.Int,
+	h.AddGraphQLQueryField("stats", &graphql.Field{
+		Type: gqltypes.StatsType,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			return h.context.TotalActiveWebSocketConnections(), nil
+
+			return &gqltypes.Stats{
+				TotalWebSocketConnection: h.context.TotalActiveWebSocketConnections(),
+			}, nil
+
 		},
-		Description: "Query total active websocket connections",
+		Description: "Server statistics",
 	})
+
+	//h.AddGraphQLQueryField("totalActiveWebSocketConnections", &graphql.Field{
+	//	Type: graphql.Int,
+	//	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+	//		return h.context.TotalActiveWebSocketConnections(), nil
+	//	},
+	//	Description: "Query total active websocket connections",
+	//})
 
 	h.AddGraphQLMutationField("updateLive", &graphql.Field{
 		Type: graphql.Boolean,
