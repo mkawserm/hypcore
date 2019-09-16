@@ -80,7 +80,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			errorType.Group = mcodes.GraphQLGroupCode
 			errorType.Code = mcodes.GraphQLInvalidAuthorizationData
 			errorType.MessageType = "GraphQLException"
-			errorType.AddStringMessage("Oops! Invalid Authorization contextData !!!")
+			errorType.AddStringMessage("Oops! Invalid Authorization data !!!")
 			GraphQLSmartErrorMessage(w, errorType, 400)
 			return
 		}
