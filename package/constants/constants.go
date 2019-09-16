@@ -29,3 +29,9 @@ const (
 	ServiceGroup = "service"
 	NormalGroup  = "normal"
 )
+
+const WebSocketConnection = 1
+const WebSocketSecureConnection = 2
+
+const HTTPConnection = 3
+const HTTPSConnection = 4

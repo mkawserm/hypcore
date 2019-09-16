@@ -74,7 +74,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			errorType.Group = mcodes.GraphQLGroupCode
 			errorType.Code = mcodes.GraphQLInvalidAuthorizationData
 			errorType.MessageType = "GraphQLException"
-			errorType.AddStringMessage("Oops! Invalid Authorization data !!!")
+			errorType.AddStringMessage("Oops! Invalid Authorization contextData !!!")
 			GraphQLSmartErrorMessage(w, errorType, 400)
 			return
 		}
@@ -123,29 +123,24 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var params graphql.Params
+	contextData := make(map[string]interface{})
+	contextData["auth"] = map[string]string{"uid": uid, "group": group}
 
-	if gqlView.Context.HasAuthVerify() {
-		params = graphql.Params{
-			Schema:         *gqlView.Context.GraphQLSchema,
-			RequestString:  ro.Query,
-			VariableValues: ro.Variables,
-			OperationName:  ro.OperationName,
-
-			Context: context.WithValue(context.Background(),
-				"auth",
-				map[string]string{"uid": uid, "group": group}),
-		}
+	if gqlView.Context.EnableTLS {
+		contextData["connectionTpe"] = constants.HTTPSConnection
 	} else {
-		params = graphql.Params{
-			Schema:         *gqlView.Context.GraphQLSchema,
-			RequestString:  ro.Query,
-			VariableValues: ro.Variables,
-			OperationName:  ro.OperationName,
-			Context: context.WithValue(context.Background(),
-				"auth",
-				map[string]string{}),
-		}
+		contextData["connectionTpe"] = constants.HTTPConnection
+	}
+
+	var params graphql.Params
+	params = graphql.Params{
+		Schema:         *gqlView.Context.GraphQLSchema,
+		RequestString:  ro.Query,
+		VariableValues: ro.Variables,
+		OperationName:  ro.OperationName,
+
+		Context: context.WithValue(context.Background(),
+			"contextData", contextData),
 	}
 
 	res := graphql.Do(params)

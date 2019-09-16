@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
+	"github.com/mkawserm/hypcore/package/constants"
 	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"github.com/mkawserm/hypcore/package/variants"
@@ -27,26 +28,21 @@ func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, m
 	}
 
 	var params graphql.Params
+	contextData := make(map[string]interface{})
+	contextData["auth"] = map[string]string{
+		"uid":   ctx.GetUIDFromSID(connectionId),
+		"group": ctx.GetGroupFromSID(connectionId)}
 
-	if ctx.HasAuthVerify() {
-		params = graphql.Params{
-			Schema:        *ctx.GraphQLSchema,
-			RequestString: string(message),
-			Context: context.WithValue(context.Background(),
-				"auth",
-				map[string]string{
-					"uid":   ctx.GetUIDFromSID(connectionId),
-					"group": ctx.GetGroupFromSID(connectionId),
-				}),
-		}
+	if ctx.EnableTLS {
+		contextData["connectionTpe"] = constants.WebSocketSecureConnection
 	} else {
-		params = graphql.Params{
-			Schema:        *ctx.GraphQLSchema,
-			RequestString: string(message),
-			Context: context.WithValue(context.Background(),
-				"auth",
-				map[string]string{}),
-		}
+		contextData["connectionTpe"] = constants.WebSocketConnection
+	}
+
+	params = graphql.Params{
+		Schema:        *ctx.GraphQLSchema,
+		RequestString: string(message),
+		Context:       context.WithValue(context.Background(), "contextData", contextData),
 	}
 
 	res := graphql.Do(params)
