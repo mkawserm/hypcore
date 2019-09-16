@@ -5,6 +5,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/cors"
 	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"github.com/mkawserm/hypcore/package/variants"
@@ -18,6 +19,11 @@ type AuthView struct {
 
 func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("PATH: " + r.URL.Path)
+
+	if !cors.CheckCROSAndStepForward(authView.Context.CORSOptions, w, r) {
+		glog.Infoln("CORS!!!")
+		return
+	}
 
 	if r.Method != http.MethodPost {
 		errorType := gqltypes.NewErrorType()

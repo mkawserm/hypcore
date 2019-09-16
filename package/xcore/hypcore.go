@@ -6,6 +6,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/cors"
 	"github.com/mkawserm/hypcore/package/views"
 	xdb2 "github.com/mkawserm/hypcore/package/xdb"
 	"net/http"
@@ -171,7 +172,13 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 		AuthTokenSuperGroupTimeout:   hc.AuthTokenSuperGroupTimeout,
 		AuthTokenNormalGroupTimeout:  hc.AuthTokenNormalGroupTimeout,
 		AuthTokenServiceGroupTimeout: hc.AuthTokenServiceGroupTimeout,
+
+		CORSOptions: &cors.Options{},
 	}
+
+	// NOTE: CORS related options
+
+	// END
 
 	if hc.EnableAuthVerify {
 		hContext.AuthVerify = hc.AuthVerify

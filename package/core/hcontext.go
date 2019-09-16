@@ -6,6 +6,7 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
+	"github.com/mkawserm/hypcore/package/cors"
 	"net"
 	"net/http"
 	"sync"
@@ -74,6 +75,8 @@ type HContext struct {
 	EnableAuthPath      bool
 	EnableGraphQLPath   bool
 	EnableWebSocketPath bool
+
+	CORSOptions *cors.Options
 }
 
 func (c *HContext) AddGraphQLQueryField(name string, field *graphql.Field) {

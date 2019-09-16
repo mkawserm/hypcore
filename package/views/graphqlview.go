@@ -7,6 +7,7 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/cors"
 	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"github.com/mkawserm/hypcore/package/variants"
@@ -20,6 +21,11 @@ type GraphQLView struct {
 
 func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("PATH: " + r.URL.Path)
+
+	if !cors.CheckCROSAndStepForward(gqlView.Context.CORSOptions, w, r) {
+		glog.Infoln("CORS!!!")
+		return
+	}
 
 	uid := ""
 	ok := false

@@ -4,6 +4,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/cors"
 	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
@@ -16,6 +17,11 @@ type DynamicView struct {
 
 func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("PATH: " + r.URL.Path)
+
+	if !cors.CheckCROSAndStepForward(dView.Context.CORSOptions, w, r) {
+		glog.Infoln("CORS!!!")
+		return
+	}
 
 	// check for auth
 	if dView.Context.HasAuthVerify() {
