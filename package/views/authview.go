@@ -20,12 +20,12 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("PATH: " + r.URL.Path)
 
 	if r.Method != http.MethodPost {
-		errorType := &gqltypes.ErrorType{Group: mcodes.AuthGroupCode}
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.AuthGroupCode
+
 		errorType.Code = mcodes.AuthQueryMustBeUsingPostRequest
 		errorType.MessageType = "GraphQueryException"
-		errorType.Messages = make([]interface{}, 0)
-		errorType.Messages = append(errorType.Messages,
-			map[string]string{"message": "Oops! GraphQL query must be done using post request !!!"})
+		errorType.AddStringMessage("Oops! GraphQL query must be done using post request !!!")
 
 		GraphQLSmartErrorMessage(w, errorType, 400)
 		return
@@ -33,12 +33,11 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		errorType := &gqltypes.ErrorType{Group: mcodes.AuthGroupCode}
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.AuthGroupCode
 		errorType.Code = mcodes.AuthRequestBodyReadError
 		errorType.MessageType = "GraphQueryException"
-		errorType.Messages = make([]interface{}, 0)
-		errorType.Messages = append(errorType.Messages,
-			map[string]string{"message": "Oops! Failed to read request body !!!"})
+		errorType.AddStringMessage("Oops! Failed to read request body !!!")
 		GraphQLSmartErrorMessage(w, errorType, 400)
 		return
 	}
@@ -47,13 +46,11 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println(string(bodyBytes))
 
 	if ro == nil {
-		errorType := &gqltypes.ErrorType{Group: mcodes.AuthGroupCode}
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.AuthGroupCode
 		errorType.Code = mcodes.AuthRequestBodyParseError
 		errorType.MessageType = "GraphQueryException"
-		errorType.Messages = make([]interface{}, 0)
-
-		errorType.Messages = append(errorType.Messages,
-			map[string]string{"message": "Oops! Failed to read request body !!!"})
+		errorType.AddStringMessage("Oops! Failed to parse request body !!!")
 
 		GraphQLSmartErrorMessage(w, errorType, 400)
 		return
@@ -73,18 +70,14 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(res.Errors) > 0 {
 		glog.Errorf("failed to execute graphql operation, errors: %+v\n", res.Errors)
 
-		errorType := &gqltypes.ErrorType{Group: mcodes.AuthGroupCode}
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.AuthGroupCode
 		errorType.Code = mcodes.AuthGraphQLExecutionError
 		errorType.MessageType = "GraphQueryException"
-
-		errorType.Messages = make([]interface{}, 0)
-		errorType.Messages = append(errorType.Messages,
-			map[string]string{"message": "Oops! GraphQL query execution error!!!"})
-
-		for _, formatted_err := range res.Errors {
-			errorType.Messages = append(errorType.Messages, formatted_err)
+		errorType.AddStringMessage("Oops! GraphQL query execution error!!!")
+		for _, formattedErr := range res.Errors {
+			errorType.AddMessage(formattedErr)
 		}
-
 		GraphQLSmartErrorMessage(w, errorType, 400)
 		return
 	}

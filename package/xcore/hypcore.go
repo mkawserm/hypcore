@@ -232,7 +232,7 @@ func (h *HypCore) Setup() {
 	if h.context.AuthAudiences == nil {
 		h.context.AuthAudiences = []string{"HypCore", "Hypnos", "Hypnosis"}
 	}
-
+	glog.Infof("Auth Bearer : %s\n", h.context.AuthBearer)
 	glog.Infof("Auth Issuer : %s\n", h.context.AuthIssuer)
 	glog.Infof("Auth Token Default Timeout: %d seconds\n", h.context.AuthTokenDefaultTimeout)
 	glog.Infof("Auth Token Super Group Timeout: %d seconds\n", h.context.AuthTokenSuperGroupTimeout)
@@ -296,7 +296,7 @@ func (h *HypCore) Setup() {
 		}),
 	})
 
-	h.context.GraphQLSchema = schema
+	h.context.GraphQLSchema = &schema
 
 	h.context.AddAuthQueryField("verifyToken", core2.JWTTokenVerify(h.context))
 	h.context.AddAuthMutationField("auth", core2.JWTTokenAuth(h.context))

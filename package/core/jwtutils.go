@@ -69,7 +69,15 @@ func VerifyJWT(token []byte,
 	logToGlog bool) (map[string]interface{}, bool) {
 
 	keys := jwt.KeyRegister{}
-	if !IsHMACAlg(token) {
+	newToken := []byte("")
+
+	if plainToken {
+		newToken = token
+	} else {
+		newToken = tokenFromHeader(token, authBearer)
+	}
+
+	if !IsHMACAlg(newToken) {
 		_, err := keys.LoadPEM([]byte(authPublicKey), []byte(""))
 		if err != nil {
 			if logToGlog {
@@ -85,11 +93,7 @@ func VerifyJWT(token []byte,
 	var claims *jwt.Claims
 	var err2 error
 
-	if plainToken {
-		claims, err2 = keys.Check(token)
-	} else {
-		claims, err2 = keys.Check(tokenFromHeader(token, authBearer))
-	}
+	claims, err2 = keys.Check(newToken)
 
 	if err2 == nil {
 		// glog.Infoln(string(claims.Raw))

@@ -64,7 +64,7 @@ type HContext struct {
 	//GraphQLMutation *graphql.Object
 	GraphQLQueryFields    graphql.Fields
 	GraphQLMutationFields graphql.Fields
-	GraphQLSchema         graphql.Schema
+	GraphQLSchema         *graphql.Schema
 
 	AuthQueryFields    graphql.Fields
 	AuthMutationFields graphql.Fields

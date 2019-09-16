@@ -7,7 +7,9 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
+	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
+	"github.com/mkawserm/hypcore/package/variants"
 	"io/ioutil"
 	"net/http"
 )
@@ -27,9 +29,14 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if gqlView.Context.HasAuthVerify() {
 		h := httpGetHeader(r.Header, constants.HeaderAuthorizationCanonical)
 		if h == "" {
-			GraphQLErrorMessage(w,
-				[]byte("Oops! No Authorization header found !!!"),
-				mcodes.NoAuthorizationHeaderFound, 400)
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.GraphQLGroupCode
+			errorType.Code = mcodes.GraphQLNoAuthorizationHeaderFound
+			errorType.MessageType = "GraphQLException"
+
+			errorType.AddStringMessage("Oops! No Authorization header found !!!")
+
+			GraphQLSmartErrorMessage(w, errorType, 400)
 
 			return
 
@@ -53,15 +60,22 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if ok {
 			if uid == "" {
-				GraphQLErrorMessage(w,
-					[]byte("Oops! No UID found from AuthVerifyInterface !!!"),
-					mcodes.NoUIDFromAuthVerifyInterface, 400)
+				errorType := gqltypes.NewErrorType()
+				errorType.Group = mcodes.GraphQLGroupCode
+				errorType.Code = mcodes.GraphQLNoUIDFoundFromToken
+				errorType.MessageType = "GraphQLException"
+				errorType.AddStringMessage("Oops! No UID found from AuthVerifyInterface !!!")
+				GraphQLSmartErrorMessage(w, errorType, 400)
 				return
 			}
 
 		} else { // Failed to authorize. not ok
-			GraphQLErrorMessage(w, []byte("Oops! Invalid Authorization data !!!"),
-				mcodes.InvalidAuthorizationData, 400)
+			errorType := gqltypes.NewErrorType()
+			errorType.Group = mcodes.GraphQLGroupCode
+			errorType.Code = mcodes.GraphQLInvalidAuthorizationData
+			errorType.MessageType = "GraphQLException"
+			errorType.AddStringMessage("Oops! Invalid Authorization data !!!")
+			GraphQLSmartErrorMessage(w, errorType, 400)
 			return
 		}
 	} // end of auth
@@ -76,16 +90,36 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	glog.Infoln("Middleware processing complete.")
 
 	if r.Method != http.MethodPost {
-		GraphQLErrorMessage(w,
-			[]byte("Oops! GraphQL query must be done using post request !!!"),
-			mcodes.InvalidRequestMethod, 400)
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.GraphQLGroupCode
+		errorType.Code = mcodes.GraphQLQueryMustBeUsingPostRequest
+		errorType.MessageType = "GraphQLException"
+		errorType.AddStringMessage("Oops! GraphQL query must be done using post request !!!")
+		GraphQLSmartErrorMessage(w, errorType, 400)
 		return
 	}
 
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		GraphQLErrorMessage(w, []byte("Oops! Failed to read request body !!!"),
-			mcodes.FailedToReadRequestBody, 400)
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.GraphQLGroupCode
+		errorType.Code = mcodes.GraphQLRequestBodyReadError
+		errorType.MessageType = "GraphQLException"
+		errorType.AddStringMessage("Oops! Failed to read request body !!!")
+		GraphQLSmartErrorMessage(w, errorType, 400)
+		return
+	}
+
+	ro := variants.ParseGraphQLQuery(bodyBytes)
+	//fmt.Println(string(bodyBytes))
+
+	if ro == nil {
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.GraphQLGroupCode
+		errorType.Code = mcodes.GraphQLRequestBodyParseError
+		errorType.MessageType = "GraphQLException"
+		errorType.AddStringMessage("Oops! Failed to parse request body !!!")
+		GraphQLSmartErrorMessage(w, errorType, 400)
 		return
 	}
 
@@ -93,16 +127,21 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if gqlView.Context.HasAuthVerify() {
 		params = graphql.Params{
-			Schema:        gqlView.Context.GraphQLSchema,
-			RequestString: string(bodyBytes),
+			Schema:         *gqlView.Context.GraphQLSchema,
+			RequestString:  ro.Query,
+			VariableValues: ro.Variables,
+			OperationName:  ro.OperationName,
+
 			Context: context.WithValue(context.Background(),
 				"auth",
 				map[string]string{"uid": uid, "group": group}),
 		}
 	} else {
 		params = graphql.Params{
-			Schema:        gqlView.Context.GraphQLSchema,
-			RequestString: string(bodyBytes),
+			Schema:         *gqlView.Context.GraphQLSchema,
+			RequestString:  ro.Query,
+			VariableValues: ro.Variables,
+			OperationName:  ro.OperationName,
 			Context: context.WithValue(context.Background(),
 				"auth",
 				map[string]string{}),
@@ -112,11 +151,26 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res := graphql.Do(params)
 	if len(res.Errors) > 0 {
 		glog.Errorf("failed to execute graphql operation, errors: %+v\n", res.Errors)
-		httpBadRequest(w, []byte("Oops! GraphQL query execution error. Invalid query!!!"))
+
+		errorType := gqltypes.NewErrorType()
+		errorType.Group = mcodes.GraphQLGroupCode
+		errorType.Code = mcodes.GraphQLExecutionError
+		errorType.MessageType = "GraphQLException"
+
+		errorType.Messages = make([]interface{}, 0)
+		errorType.Messages = append(errorType.Messages,
+			map[string]string{"message": "Oops! GraphQL query execution error!!!"})
+
+		for _, formattedErr := range res.Errors {
+			errorType.AddMessage(formattedErr)
+		}
+
+		GraphQLSmartErrorMessage(w, errorType, 400)
 		return
 	}
 
 	rJSON, _ := json.Marshal(res)
+	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(rJSON)
 }

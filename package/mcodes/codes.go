@@ -9,3 +9,16 @@ const AuthQueryMustBeUsingPostRequest = 1
 const AuthRequestBodyReadError = 2
 const AuthRequestBodyParseError = 3
 const AuthGraphQLExecutionError = 4
+
+const GraphQLGroupCode = 2
+const GraphQLNoAuthorizationHeaderFound = 1
+const GraphQLNoUIDFoundFromToken = 2
+const GraphQLInvalidAuthorizationData = 3
+const GraphQLQueryMustBeUsingPostRequest = 4
+const GraphQLRequestBodyReadError = 5
+const GraphQLRequestBodyParseError = 6
+const GraphQLExecutionError = 7
+
+const GraphQLWSGroupCode = 3
+const GraphQLWSMessageParseError = 1
+const GraphQLWSExecutionError = 2
