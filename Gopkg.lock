@@ -101,7 +101,7 @@
   branch = "master"
   name = "github.com/mmcloughlin/avo"
   packages = ["attr","build","buildtags","gotypes","internal/prnt","internal/stack","ir","operand","pass","printer","reg","src","x86"]
-  revision = "bb615f61ce85790a1667efc145c66e917cce1a39"
+  revision = "0bcbe827310c5a75981497d63dec804cb7ec5448"
 
 [[projects]]
   name = "github.com/pascaldekloe/jwt"
@@ -185,7 +185,7 @@
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
-  revision = "31e00f45c22e7b8b4b5a004fd8a01c664f7b175b"
+  revision = "92af9d69eff2a602786b23a4298a4a55bbcdd529"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
