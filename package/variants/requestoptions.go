@@ -24,8 +24,9 @@ func ParseGraphQLQuery(data []byte) *RequestOptions {
 		// Probably `variables` was sent as a string instead of an object.
 		// So, we try to be polite and try to parse that as a JSON string
 		var optsCompatible RequestOptionsCompatibility
-		json.Unmarshal(data, &optsCompatible)
-		json.Unmarshal([]byte(optsCompatible.Variables), &opts.Variables)
+		_ = json.Unmarshal(data, &optsCompatible)
+
+		_ = json.Unmarshal([]byte(optsCompatible.Variables), &opts.Variables)
 	}
 
 	return &opts

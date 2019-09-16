@@ -44,6 +44,7 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ro := variants.ParseGraphQLQuery(bodyBytes)
+	//fmt.Println(string(bodyBytes))
 
 	if ro == nil {
 		errorType := &gqltypes.ErrorType{Group: mcodes.AuthGroupCode}
@@ -58,10 +59,11 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//glog.Infoln(ro)
 	var params graphql.Params
 
 	params = graphql.Params{
-		Schema:         authView.Context.AuthSchema,
+		Schema:         *authView.Context.AuthSchema,
 		RequestString:  ro.Query,
 		VariableValues: ro.Variables,
 		OperationName:  ro.OperationName,
@@ -88,6 +90,7 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rJSON, _ := json.Marshal(res)
+	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(rJSON)
 }

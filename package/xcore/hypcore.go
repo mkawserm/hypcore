@@ -280,6 +280,7 @@ func (h *HypCore) Setup() {
 
 	h.context.GraphQLSchema = schema
 
+	h.context.AddAuthQueryField("tokenVerify", core2.JWTTokenVerify(h.context))
 	h.context.AddAuthMutationField("tokenAuth", core2.JWTTokenAuth(h.context))
 
 	authSchema, _ := graphql.NewSchema(graphql.SchemaConfig{
@@ -295,7 +296,7 @@ func (h *HypCore) Setup() {
 		}),
 	})
 
-	h.context.AuthSchema = authSchema
+	h.context.AuthSchema = &authSchema
 
 	if h.context.EventQueueSize == 0 {
 		h.context.EventQueueSize = 100

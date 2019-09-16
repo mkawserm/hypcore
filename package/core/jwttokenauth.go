@@ -14,9 +14,26 @@ import (
 	"time"
 )
 
+func JWTTokenVerify(ctx *HContext) *graphql.Field {
+	return &graphql.Field{
+		Type:        graphql.Boolean,
+		Description: "Verify JWT token",
+		Args: graphql.FieldConfigArgument{
+			"token": &graphql.ArgumentConfig{
+				Type: graphql.NewNonNull(graphql.String),
+			},
+		},
+		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			glog.Infoln("JWTTokenVerify")
+			return false, nil
+		},
+	}
+}
+
 func JWTTokenAuth(ctx *HContext) *graphql.Field {
 	return &graphql.Field{
-		Type: gqltypes.TokenType,
+		Type:        gqltypes.TokenType,
+		Description: "Generate JWT token",
 		Args: graphql.FieldConfigArgument{
 			"username": &graphql.ArgumentConfig{
 				Type: graphql.NewNonNull(graphql.String),
@@ -26,7 +43,7 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 			},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-			glog.Infoln("JWT Token Auth")
+			glog.Infoln("JWTTokenAuth")
 
 			username := params.Args["username"].(string)
 			password := params.Args["password"].(string)
@@ -170,7 +187,5 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 
 			return gqltypes.Token{Token: ""}, errors.New("failed to generate token")
 		},
-
-		Description: "Generate JWT token",
 	}
 }

@@ -66,7 +66,7 @@ type HContext struct {
 
 	AuthQueryFields    graphql.Fields
 	AuthMutationFields graphql.Fields
-	AuthSchema         graphql.Schema
+	AuthSchema         *graphql.Schema
 
 	EnableLivePath      bool
 	EnableAuthPath      bool

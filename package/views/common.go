@@ -76,7 +76,7 @@ func GraphQLErrorMessage(w http.ResponseWriter, msg []byte, error_code string, c
 }
 
 func GraphQLSmartErrorMessage(w http.ResponseWriter, msg interface{}, code int) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 
 	messageFormat := `{"data":null,"error":%s}`
@@ -87,7 +87,7 @@ func GraphQLSmartErrorMessage(w http.ResponseWriter, msg interface{}, code int) 
 		w.Header().Set("Content-Length", strconv.Itoa(len(output)))
 		_, _ = w.Write([]byte(output))
 	} else {
-		output := `{"data":null,"error":""}`
+		output := `{"data":null,"error":[]}`
 		w.Header().Set("Content-Length", strconv.Itoa(len(output)))
 		_, _ = w.Write([]byte(output))
 	}
