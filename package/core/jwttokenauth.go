@@ -57,6 +57,7 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 			password := params.Args["password"].(string)
 
 			user := &models.User{Pk: username}
+			lastLogin := &models.UserLastLogin{Pk: username, UpdatedAt: time.Now().UnixNano()}
 
 			if ctx.GetObject(user) {
 				// glog.Infoln(user.Password)
@@ -92,6 +93,7 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 							glog.Errorf("HS Token generation error: %s\n", err.Error())
 							return gqltypes.Token{Token: ""}, errors.New("failed to generate token")
 						} else {
+							ctx.AddObject(lastLogin)
 							return gqltypes.Token{Token: string(token)}, nil
 						}
 					} else if strings.HasPrefix(ctx.AuthAlgorithm, "EdDSA") {
@@ -113,6 +115,7 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 
 						token, err := claims.EdDSASign(privateKey)
 						if err == nil {
+							ctx.AddObject(lastLogin)
 							return gqltypes.Token{Token: string(token)}, nil
 						} else {
 							glog.Errorf("EdDSA Token generation error: %s\n", err.Error())
@@ -136,6 +139,7 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 
 						token, err := claims.ECDSASign(ctx.AuthAlgorithm, privateKey)
 						if err == nil {
+							ctx.AddObject(lastLogin)
 							return gqltypes.Token{Token: string(token)}, nil
 						} else {
 							glog.Errorf("ES Token generation error: %s\n", err.Error())
@@ -160,6 +164,7 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 
 						token, err := claims.RSASign(ctx.AuthAlgorithm, privateKey)
 						if err == nil {
+							ctx.AddObject(lastLogin)
 							return gqltypes.Token{Token: string(token)}, nil
 						} else {
 							glog.Errorf("ES Token generation error: %s\n", err.Error())
@@ -184,6 +189,7 @@ func JWTTokenAuth(ctx *HContext) *graphql.Field {
 
 						token, err := claims.RSASign(ctx.AuthAlgorithm, privateKey)
 						if err == nil {
+							ctx.AddObject(lastLogin)
 							return gqltypes.Token{Token: string(token)}, nil
 						} else {
 							glog.Errorf("PS Token generation error: %s\n", err.Error())
