@@ -38,10 +38,6 @@ func (view *view) loadParseTypecheck(ctx context.Context, f *goFile, fh source.F
 			log.Error(ctx, "loadParseTypeCheck: failed to get CheckPackageHandle", err, telemetry.Package.Of(m.id))
 			continue
 		}
-		if _, err := cph.check(ctx); err != nil {
-			log.Error(ctx, "loadParseTypeCheck: failed to check package", err, telemetry.Package.Of(m.id))
-			continue
-		}
 		// Cache this package on the file object, since all dependencies are cached in the Import function.
 		if err := imp.cachePackage(ctx, cph); err != nil {
 			log.Error(ctx, "loadParseTypeCheck: failed to cache package", err, telemetry.Package.Of(m.id))
@@ -63,7 +59,7 @@ func (view *view) load(ctx context.Context, f *goFile, fh source.FileHandle) ([]
 
 	var toDelete []packageID
 	f.mu.Lock()
-	for id, cph := range f.pkgs {
+	for id, cph := range f.cphs {
 		if cph != nil {
 			toDelete = append(toDelete, id)
 		}
@@ -128,8 +124,8 @@ func (v *view) checkMetadata(ctx context.Context, f *goFile, fh source.FileHandl
 	for k := range f.meta {
 		delete(f.meta, k)
 	}
-	for k := range f.pkgs {
-		delete(f.pkgs, k)
+	for k := range f.cphs {
+		delete(f.cphs, k)
 	}
 	f.mu.Unlock()
 
@@ -164,7 +160,7 @@ func validateMetadata(ctx context.Context, missingImports map[packagePath]struct
 
 	// If we have already seen these missing imports before, and we have type information,
 	// there is no need to continue.
-	if sameSet(missingImports, f.missingImports) && len(f.pkgs) != 0 {
+	if sameSet(missingImports, f.missingImports) && len(f.cphs) != 0 {
 		return nil, nil
 	}
 
@@ -194,7 +190,7 @@ func (v *view) shouldRunGopackages(ctx context.Context, f *goFile, fh source.Fil
 		return true
 	}
 	// Get file content in case we don't already have it.
-	parsed, err := v.session.cache.ParseGoHandle(fh, source.ParseHeader).Parse(ctx)
+	parsed, _, err := v.session.cache.ParseGoHandle(fh, source.ParseHeader).Parse(ctx)
 	if err == context.Canceled {
 		log.Error(ctx, "parsing file header", err, tag.Of("file", f.URI()))
 		return false

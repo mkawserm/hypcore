@@ -8,6 +8,12 @@
   revision = "46b345b51c9667fcbaad862a370d73bd7aa802b6"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/alexandrevicenzi/unchained"
+  packages = [".","argon2","bcrypt","pbkdf2"]
+  revision = "ecd422680cf19d7600537dc1558ee2ea797ef520"
+
+[[projects]]
   name = "github.com/dgraph-io/badger"
   packages = [".","options","pb","skl","table","y"]
   revision = "2fa005c9d4bf695277ab5214c1fbce3735b9562a"
@@ -101,7 +107,7 @@
   branch = "master"
   name = "github.com/mmcloughlin/avo"
   packages = ["attr","build","buildtags","gotypes","internal/prnt","internal/stack","ir","operand","pass","printer","reg","src","x86"]
-  revision = "0bcbe827310c5a75981497d63dec804cb7ec5448"
+  revision = "c8004ba627cacd7bab12cf9243c2f14d89c71cbe"
 
 [[projects]]
   name = "github.com/pascaldekloe/jwt"
@@ -148,8 +154,8 @@
 [[projects]]
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
-  version = "v1.0.3"
+  revision = "e8f29969b682c41a730f8f08b76033b120498464"
+  version = "v1.0.4"
 
 [[projects]]
   name = "github.com/spf13/viper"
@@ -160,20 +166,20 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["pbkdf2"]
+  packages = ["argon2","bcrypt","blake2b","blowfish","pbkdf2"]
   revision = "227b76d455e791cb042b03e633e2f7fbcfdf74a5"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["internal/timeseries","trace"]
-  revision = "24e19bdeb0f2d062d8e2640d50a7aaf2a7f80e7a"
+  revision = "c8589233b77dde5edd2205ba8a4fb5c9c2472556"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix"]
-  revision = "c3b328c6e5a763a2bfc82a48b4bd855037210934"
+  packages = ["cpu","unix"]
+  revision = "b4ddaad3f8a36719f2b8bc6486c14cc468ca2bb5"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -185,7 +191,7 @@
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
-  revision = "92af9d69eff2a602786b23a4298a4a55bbcdd529"
+  revision = "3b4f30a44f3bd52b676ee9e88db10d11971b7363"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -196,6 +202,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d7d98bb4f117152deca59546e0f4217757af84fe3f3008df629fb7ad89abc857"
+  inputs-digest = "435bc76c1492fb14c9eb139e9626a937e1385d4a8b526c1312932b4de8eeadb0"
   solver-name = "gps-cdcl"
   solver-version = 1

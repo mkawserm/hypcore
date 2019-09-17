@@ -111,17 +111,11 @@ const (
 
 	// lowScore indicates an irrelevant or not useful completion item.
 	lowScore float64 = 0.01
-
-	// completionBudget is the soft latency goal for completion requests. Most
-	// requests finish in a couple milliseconds, but in some cases deep
-	// completions can take much longer. As we use up our budget we dynamically
-	// reduce the search scope to ensure we return timely results.
-	completionBudget = 100 * time.Millisecond
 )
 
-// matcher matches a candidate's label against the user input.  The
-// returned score reflects the quality of the match. A score less than
-// zero indicates no match, and a score of one means a perfect match.
+// matcher matches a candidate's label against the user input. The
+// returned score reflects the quality of the match. A score of zero
+// indicates no match, and a score of one means a perfect match.
 type matcher interface {
 	Score(candidateLabel string) (score float32)
 }
@@ -324,12 +318,7 @@ func (c *completer) found(obj types.Object, score float64, imp *imports.ImportIn
 
 	cand.name = c.deepState.chainString(obj.Name())
 	matchScore := c.matcher.Score(cand.name)
-	if matchScore >= 0 {
-		// Avoid a score of zero since that homogenizes all candidates.
-		if matchScore == 0 {
-			matchScore = 0.001
-		}
-
+	if matchScore > 0 {
 		cand.score *= float64(matchScore)
 
 		// Avoid calling c.item() for deep candidates that wouldn't be in the top
@@ -378,30 +367,25 @@ func Completion(ctx context.Context, view View, f GoFile, pos protocol.Position,
 
 	startTime := time.Now()
 
-	pkg, err := f.GetPackage(ctx)
+	cphs, err := f.CheckPackageHandles(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	cph := NarrowestCheckPackageHandle(cphs)
+	pkg, err := cph.Check(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 	var ph ParseGoHandle
-	for _, h := range pkg.GetHandles() {
+	for _, h := range pkg.Files() {
 		if h.File().Identity().URI == f.URI() {
 			ph = h
 		}
 	}
-	file, err := ph.Cached(ctx)
+	file, m, err := ph.Cached(ctx)
 	if file == nil {
 		return nil, nil, err
 	}
-	data, _, err := ph.File().Read(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	fset := view.Session().Cache().FileSet()
-	tok := fset.File(file.Pos())
-	if tok == nil {
-		return nil, nil, errors.Errorf("no token.File for %s", f.URI())
-	}
-	m := protocol.NewColumnMapper(f.URI(), f.URI().Filename(), fset, tok, data)
 	spn, err := m.PointSpan(pos)
 	if err != nil {
 		return nil, nil, err

@@ -153,7 +153,7 @@ func (cph *checkPackageHandle) ID() string {
 func (cph *checkPackageHandle) Cached(ctx context.Context) (source.Package, error) {
 	v := cph.handle.Cached()
 	if v == nil {
-		return nil, errors.Errorf("no cached value for %s", cph.m.pkgPath)
+		return nil, errors.Errorf("no cached type information for %s", cph.m.pkgPath)
 	}
 	data := v.(*checkPackageData)
 	return data.pkg, data.err
@@ -258,7 +258,7 @@ func (imp *importer) typeCheck(ctx context.Context, cph *checkPackageHandle, m *
 		go func(i int, ph source.ParseGoHandle) {
 			defer wg.Done()
 
-			files[i], parseErrors[i] = ph.Parse(ctx)
+			files[i], _, parseErrors[i] = ph.Parse(ctx)
 		}(i, ph)
 	}
 	wg.Wait()
@@ -345,12 +345,12 @@ func (imp *importer) cachePerFile(ctx context.Context, gof *goFile, ph source.Pa
 	defer gof.mu.Unlock()
 
 	// Set the package even if we failed to parse the file.
-	if gof.pkgs == nil {
-		gof.pkgs = make(map[packageID]source.CheckPackageHandle)
+	if gof.cphs == nil {
+		gof.cphs = make(map[packageID]source.CheckPackageHandle)
 	}
-	gof.pkgs[cph.m.id] = cph
+	gof.cphs[cph.m.id] = cph
 
-	file, err := ph.Parse(ctx)
+	file, _, err := ph.Parse(ctx)
 	if file == nil {
 		return errors.Errorf("no AST for %s: %v", ph.File().Identity().URI, err)
 	}

@@ -109,10 +109,14 @@ func (s *Server) applyChanges(ctx context.Context, uri span.URI, changes []proto
 	if err != nil {
 		return "", jsonrpc2.NewErrorf(jsonrpc2.CodeInternalError, "file not found (%v)", err)
 	}
-	fset := s.session.Cache().FileSet()
 	for _, change := range changes {
 		// Update column mapper along with the content.
-		m := protocol.NewColumnMapper(uri, uri.Filename(), fset, nil, content)
+		converter := span.NewContentConverter(uri.Filename(), content)
+		m := &protocol.ColumnMapper{
+			URI:       uri,
+			Converter: converter,
+			Content:   content,
+		}
 
 		spn, err := m.RangeSpan(*change.Range)
 		if err != nil {
@@ -168,17 +172,21 @@ func (s *Server) didClose(ctx context.Context, params *protocol.DidCloseTextDocu
 		log.Error(ctx, "closing a non-Go file, no diagnostics to clear", nil, telemetry.File)
 		return nil
 	}
-	pkg, err := gof.GetPackage(ctx)
+	cphs, err := gof.CheckPackageHandles(ctx)
 	if err != nil {
-		return err
+		log.Error(ctx, "no CheckPackageHandles", err, telemetry.URI.Of(gof.URI()))
+		return nil
 	}
-	for _, ph := range pkg.GetHandles() {
-		// If other files from this package are open, don't clear.
-		if s.session.IsOpen(ph.File().Identity().URI) {
-			clear = nil
-			return nil
+	for _, cph := range cphs {
+		for _, ph := range cph.Files() {
+			// If other files from this package are open, don't clear.
+			if s.session.IsOpen(ph.File().Identity().URI) {
+				clear = nil
+				return nil
+			}
+			clear = append(clear, ph.File().Identity().URI)
 		}
-		clear = append(clear, ph.File().Identity().URI)
 	}
+
 	return nil
 }

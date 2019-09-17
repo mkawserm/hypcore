@@ -2,9 +2,10 @@ package models
 
 import (
 	"github.com/mkawserm/hypcore/package/constants"
-	"github.com/mkawserm/hypcore/package/crypto/hasher"
 	"time"
 )
+
+import "github.com/alexandrevicenzi/unchained"
 
 type User struct {
 	Pk        string
@@ -62,7 +63,7 @@ func (u *User) GetGroup() string {
 }
 
 func (u *User) IsPasswordValid(rawPassword string) bool {
-	b, _ := hasher.CheckPassword(rawPassword, u.Password)
+	b, _ := unchained.CheckPassword(rawPassword, u.Password)
 	return b
 }
 
@@ -70,7 +71,7 @@ func (u *User) SetPassword(rawPassword string) bool {
 	//fmt.Printf("RAW PSS '%s' \n", rawPassword)
 
 	var err error
-	u.Password, err = hasher.MakePassword(rawPassword, "", "default")
+	u.Password, err = unchained.MakePassword(rawPassword, unchained.GetRandomString(12), "default")
 
 	//fmt.Println(u.Password)
 
