@@ -5,7 +5,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
-	"github.com/mkawserm/hypcore/package/cors"
 	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
@@ -16,10 +15,10 @@ type WebSocketUpgradeView struct {
 }
 
 func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !cors.CheckCROSAndStepForward(wsu.Context.CORSOptions, w, r) {
-		glog.Infoln("CORS!!!")
-		return
-	}
+	//if !cors.CheckCROSAndStepForward(wsu.Context.CORSOptions, w, r) {
+	//	glog.Infoln("CORS!!!")
+	//	return
+	//}
 
 	if r.URL.Path == string(wsu.Context.WebSocketUpgradePath) {
 
