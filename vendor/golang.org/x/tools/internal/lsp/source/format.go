@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"go/format"
+	"log"
 
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/internal/imports"
@@ -37,17 +38,17 @@ func Format(ctx context.Context, view View, f File) ([]protocol.TextEdit, error)
 	if err != nil {
 		return nil, err
 	}
-	var ph ParseGoHandle
-	for _, h := range pkg.Files() {
-		if h.File().Identity().URI == f.URI() {
-			ph = h
-		}
-	}
-	if ph == nil {
+	ph, err := pkg.File(f.URI())
+	if err != nil {
 		return nil, err
 	}
-	file, m, err := ph.Parse(ctx)
-	if file == nil {
+	// Be extra careful that the file's ParseMode is correct,
+	// otherwise we might replace the user's code with a trimmed AST.
+	if ph.Mode() != ParseFull {
+		return nil, errors.Errorf("%s was parsed in the incorrect mode", ph.File().Identity().URI)
+	}
+	file, m, _, err := ph.Parse(ctx)
+	if err != nil {
 		return nil, err
 	}
 	if hasListErrors(pkg.GetErrors()) || hasParseErrors(pkg, f.URI()) {
@@ -102,14 +103,14 @@ func Imports(ctx context.Context, view View, f GoFile, rng span.Range) ([]protoc
 	if hasListErrors(pkg.GetErrors()) {
 		return nil, errors.Errorf("%s has list errors, not running goimports", f.URI())
 	}
-	var ph ParseGoHandle
-	for _, h := range pkg.Files() {
-		if h.File().Identity().URI == f.URI() {
-			ph = h
-		}
-	}
-	if ph == nil {
+	ph, err := pkg.File(f.URI())
+	if err != nil {
 		return nil, err
+	}
+	// Be extra careful that the file's ParseMode is correct,
+	// otherwise we might replace the user's code with a trimmed AST.
+	if ph.Mode() != ParseFull {
+		return nil, errors.Errorf("%s was parsed in the incorrect mode", ph.File().Identity().URI)
 	}
 	options := &imports.Options{
 		// Defaults.
@@ -133,8 +134,8 @@ func Imports(ctx context.Context, view View, f GoFile, rng span.Range) ([]protoc
 	if err != nil {
 		return nil, err
 	}
-	_, m, err := ph.Parse(ctx)
-	if m == nil {
+	_, m, _, err := ph.Parse(ctx)
+	if err != nil {
 		return nil, err
 	}
 	return computeTextEdits(ctx, ph.File(), m, string(formatted))
@@ -201,8 +202,8 @@ func AllImportsFixes(ctx context.Context, view View, f File) (edits []protocol.T
 		if err != nil {
 			return err
 		}
-		_, m, err := ph.Parse(ctx)
-		if m == nil {
+		_, m, _, err := ph.Parse(ctx)
+		if err != nil {
 			return err
 		}
 		edits, err = computeTextEdits(ctx, ph.File(), m, string(formatted))
@@ -278,6 +279,7 @@ func hasParseErrors(pkg Package, uri span.URI) bool {
 func hasListErrors(errors []packages.Error) bool {
 	for _, err := range errors {
 		if err.Kind == packages.ListError {
+			log.Printf("LIST ERROR: %v", err)
 			return true
 		}
 	}

@@ -94,7 +94,7 @@ func (r *runner) Diagnostics(t *testing.T, data tests.Diagnostics) {
 		if !ok {
 			t.Fatalf("%s is not a Go file: %v", uri, err)
 		}
-		results, err := source.Diagnostics(r.ctx, v, gof, nil)
+		results, _, err := source.Diagnostics(r.ctx, v, gof, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -179,17 +179,25 @@ func (r *runner) Completion(t *testing.T, data tests.Completions, snippets tests
 					break
 				}
 			}
-			if got == nil {
-				t.Fatalf("%s: couldn't find completion matching %q", src.URI(), wantItem.Label)
-			}
 			var expected string
 			if usePlaceholders {
 				expected = want.PlaceholderSnippet
 			} else {
 				expected = want.PlainSnippet
 			}
-			if expected != got.TextEdit.NewText {
-				t.Errorf("%s: expected snippet %q, got %q", src, expected, got.TextEdit.NewText)
+
+			if expected == "" {
+				if got != nil {
+					t.Fatalf("%s:%d: expected no snippet but got %q", src.URI(), src.Start().Line(), got.TextEdit.NewText)
+				}
+			} else {
+				if got == nil {
+					t.Fatalf("%s:%d: couldn't find completion matching %q", src.URI(), src.Start().Line(), wantItem.Label)
+				}
+
+				if expected != got.TextEdit.NewText {
+					t.Errorf("%s: expected snippet %q, got %q", src, expected, got.TextEdit.NewText)
+				}
 			}
 			view.SetOptions(original)
 		}
@@ -558,7 +566,7 @@ func (r *runner) SuggestedFix(t *testing.T, data tests.SuggestedFixes) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		results, err := source.Diagnostics(r.ctx, v, f, nil)
+		results, _, err := source.Diagnostics(r.ctx, v, f, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

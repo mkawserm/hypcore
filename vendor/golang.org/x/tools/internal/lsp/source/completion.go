@@ -306,8 +306,12 @@ func (c *completer) found(obj types.Object, score float64, imp *imports.ImportIn
 		imp:   imp,
 	}
 
-	if c.matchingType(&cand) {
+	if c.matchingCandidate(&cand) {
 		cand.score *= highScore
+	} else if isTypeName(obj) {
+		// If obj is a *types.TypeName that didn't otherwise match, check
+		// if a literal object of this type makes a good candidate.
+		c.literal(obj.Type())
 	}
 
 	// Favor shallow matches by lowering weight according to depth.
@@ -376,14 +380,12 @@ func Completion(ctx context.Context, view View, f GoFile, pos protocol.Position,
 	if err != nil {
 		return nil, nil, err
 	}
-	var ph ParseGoHandle
-	for _, h := range pkg.Files() {
-		if h.File().Identity().URI == f.URI() {
-			ph = h
-		}
+	ph, err := pkg.File(f.URI())
+	if err != nil {
+		return nil, nil, err
 	}
-	file, m, err := ph.Cached(ctx)
-	if file == nil {
+	file, m, _, err := ph.Cached(ctx)
+	if err != nil {
 		return nil, nil, err
 	}
 	spn, err := m.PointSpan(pos)
@@ -653,6 +655,18 @@ func (c *completer) lexical() error {
 			}
 		}
 	}
+
+	if c.expectedType.objType != nil {
+		// If we have an expected type and it is _not_ a named type, see
+		// if an object literal makes a good candidate. Named types are
+		// handled during the normal lexical object search. For example,
+		// if our expected type is "[]int", this will add a candidate of
+		// "[]int{}".
+		if _, named := deref(c.expectedType.objType).(*types.Named); !named {
+			c.literal(c.expectedType.objType)
+		}
+	}
+
 	return nil
 }
 
@@ -882,6 +896,10 @@ type typeInference struct {
 	// objType is the desired type of an object used at the query position.
 	objType types.Type
 
+	// variadic is true if objType is a slice type from an initial
+	// variadic param.
+	variadic bool
+
 	// wantTypeName is true if we expect the name of a type.
 	wantTypeName bool
 
@@ -909,6 +927,7 @@ func expectedType(c *completer) typeInference {
 
 	var (
 		modifiers     []typeModifier
+		variadic      bool
 		typ           types.Type
 		convertibleTo types.Type
 	)
@@ -960,6 +979,7 @@ Nodes:
 							i = sig.Params().Len() - 1
 						}
 						typ = sig.Params().At(i).Type()
+						variadic = sig.Variadic() && i == sig.Params().Len()-1
 						break Nodes
 					}
 				}
@@ -1035,6 +1055,7 @@ Nodes:
 	}
 
 	return typeInference{
+		variadic:      variadic,
 		objType:       typ,
 		modifiers:     modifiers,
 		convertibleTo: convertibleTo,
@@ -1178,9 +1199,15 @@ Nodes:
 	}
 }
 
-// matchingType reports whether an object is a good completion candidate
-// in the context of the expected type.
-func (c *completer) matchingType(cand *candidate) bool {
+// matchingType reports whether a type matches the expected type.
+func (c *completer) matchingType(T types.Type) bool {
+	fakeObj := types.NewVar(token.NoPos, c.pkg.GetTypes(), "", T)
+	return c.matchingCandidate(&candidate{obj: fakeObj})
+}
+
+// matchingCandidate reports whether a candidate matches our type
+// inferences.
+func (c *completer) matchingCandidate(cand *candidate) bool {
 	if isTypeName(cand.obj) {
 		return c.matchingTypeName(cand)
 	}

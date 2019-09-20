@@ -68,7 +68,7 @@ func (r *runner) Diagnostics(t *testing.T, data tests.Diagnostics) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		results, err := source.Diagnostics(r.ctx, r.view, f.(source.GoFile), nil)
+		results, _, err := source.Diagnostics(r.ctx, r.view, f.(source.GoFile), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -185,9 +185,6 @@ func (r *runner) Completion(t *testing.T, data tests.Completions, snippets tests
 					got = &item
 					break
 				}
-			}
-			if got == nil {
-				t.Fatalf("%s: couldn't find completion matching %q", src.URI(), wantItem.Label)
 			}
 			expected := want.PlainSnippet
 			if usePlaceholders {

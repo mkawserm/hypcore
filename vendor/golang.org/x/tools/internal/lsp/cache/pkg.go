@@ -44,10 +44,10 @@ type pkg struct {
 	diagnostics map[*analysis.Analyzer][]source.Diagnostic
 }
 
-// packageID is a type that abstracts a package ID.
+// Declare explicit types for package paths and IDs to ensure that we never use
+// an ID where a path belongs, and vice versa. If we confused the two, it would
+// result in confusing errors because package IDs often look like package paths.
 type packageID string
-
-// packagePath is a type that abstracts a package path.
 type packagePath string
 
 type analysisEntry struct {
@@ -151,11 +151,20 @@ func (pkg *pkg) Files() []source.ParseGoHandle {
 	return pkg.files
 }
 
+func (pkg *pkg) File(uri span.URI) (source.ParseGoHandle, error) {
+	for _, ph := range pkg.Files() {
+		if ph.File().Identity().URI == uri {
+			return ph, nil
+		}
+	}
+	return nil, errors.Errorf("no ParseGoHandle for %s", uri)
+}
+
 func (pkg *pkg) GetSyntax(ctx context.Context) []*ast.File {
 	var syntax []*ast.File
 	for _, ph := range pkg.files {
-		file, _, _ := ph.Cached(ctx)
-		if file != nil {
+		file, _, _, err := ph.Cached(ctx)
+		if err == nil {
 			syntax = append(syntax, file)
 		}
 	}

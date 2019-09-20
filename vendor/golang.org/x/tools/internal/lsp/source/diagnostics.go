@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"go/ast"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -27,6 +26,7 @@ import (
 	"golang.org/x/tools/go/analysis/passes/nilfunc"
 	"golang.org/x/tools/go/analysis/passes/printf"
 	"golang.org/x/tools/go/analysis/passes/shift"
+	"golang.org/x/tools/go/analysis/passes/sortslice"
 	"golang.org/x/tools/go/analysis/passes/stdmethods"
 	"golang.org/x/tools/go/analysis/passes/structtag"
 	"golang.org/x/tools/go/analysis/passes/tests"
@@ -65,24 +65,34 @@ const (
 	SeverityError
 )
 
-func Diagnostics(ctx context.Context, view View, f GoFile, disabledAnalyses map[string]struct{}) (map[span.URI][]Diagnostic, error) {
+func Diagnostics(ctx context.Context, view View, f GoFile, disabledAnalyses map[string]struct{}) (map[span.URI][]Diagnostic, string, error) {
 	ctx, done := trace.StartSpan(ctx, "source.Diagnostics", telemetry.File.Of(f.URI()))
 	defer done()
 
 	cphs, err := f.CheckPackageHandles(ctx)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	cph := NarrowestCheckPackageHandle(cphs)
+	cph := WidestCheckPackageHandle(cphs)
 	pkg, err := cph.Check(ctx)
 	if err != nil {
 		log.Error(ctx, "no package for file", err)
-		return singleDiagnostic(f.URI(), "%s is not part of a package", f.URI()), nil
+		return singleDiagnostic(f.URI(), "%s is not part of a package", f.URI()), "", nil
 	}
+
 	// Prepare the reports we will send for the files in this package.
 	reports := make(map[span.URI][]Diagnostic)
 	for _, fh := range pkg.Files() {
 		clearReports(view, reports, fh.File().Identity().URI)
+	}
+
+	// If we have `go list` errors, we may want to offer a warning message to the user.
+	var warningMsg string
+	if hasListErrors(pkg.GetErrors()) {
+		warningMsg, err = checkCommonErrors(ctx, view, f.URI())
+		if err != nil {
+			log.Error(ctx, "error checking common errors", err, telemetry.File.Of(f.URI))
+		}
 	}
 
 	// Prepare any additional reports for the errors in this package.
@@ -105,19 +115,19 @@ func Diagnostics(ctx context.Context, view View, f GoFile, disabledAnalyses map[
 	for _, f := range revDeps {
 		cphs, err := f.CheckPackageHandles(ctx)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		cph := WidestCheckPackageHandle(cphs)
 		pkg, err := cph.Check(ctx)
 		if err != nil {
-			return nil, err
+			return nil, warningMsg, err
 		}
 		for _, fh := range pkg.Files() {
 			clearReports(view, reports, fh.File().Identity().URI)
 		}
 		diagnostics(ctx, view, pkg, reports)
 	}
-	return reports, nil
+	return reports, warningMsg, nil
 }
 
 type diagnosticSet struct {
@@ -181,22 +191,15 @@ func diagnostics(ctx context.Context, view View, pkg Package, reports map[span.U
 // spanToRange converts a span.Span to a protocol.Range,
 // assuming that the span belongs to the package whose diagnostics are being computed.
 func spanToRange(ctx context.Context, view View, pkg Package, spn span.Span, isTypeError bool) (protocol.Range, error) {
-	var (
-		fh   FileHandle
-		file *ast.File
-		m    *protocol.ColumnMapper
-		err  error
-	)
-	for _, ph := range pkg.Files() {
-		if ph.File().Identity().URI == spn.URI() {
-			fh = ph.File()
-			file, m, err = ph.Cached(ctx)
-		}
-	}
-	if file == nil {
+	ph, err := pkg.File(spn.URI())
+	if err != nil {
 		return protocol.Range{}, err
 	}
-	data, _, err := fh.Read(ctx)
+	_, m, _, err := ph.Cached(ctx)
+	if err != nil {
+		return protocol.Range{}, err
+	}
+	data, _, err := ph.File().Read(ctx)
 	if err != nil {
 		return protocol.Range{}, err
 	}
@@ -353,6 +356,8 @@ var Analyzers = []*analysis.Analyzer{
 	unreachable.Analyzer,
 	unsafeptr.Analyzer,
 	unusedresult.Analyzer,
+	// Non-vet analyzers
+	sortslice.Analyzer,
 }
 
 func runAnalyses(ctx context.Context, view View, cph CheckPackageHandle, disabledAnalyses map[string]struct{}, report func(a *analysis.Analyzer, diag analysis.Diagnostic) error) error {
