@@ -8,7 +8,6 @@ import (
 	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
-	"strings"
 )
 
 type WebSocketUpgradeView struct {
@@ -19,10 +18,7 @@ type WebSocketUpgradeView struct {
 // This is a hack to pass jwt token using Sec-WebSocket-Protocol header
 func (wsu *WebSocketUpgradeView) InstallProtocolSelector() {
 	ws.DefaultHTTPUpgrader.Protocol = func(s string) bool {
-		if strings.HasPrefix(s, wsu.Context.AuthBearer) {
-			return true
-		}
-		return false
+		return true
 	}
 }
 
@@ -34,14 +30,14 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	//	return
 	//}
 
-	glog.Infoln("Processing Middleware in the WebSocketUpgradeView.")
+	glog.Infoln("Processing Middleware in the WebSocketUpgradeView")
 	for _, mi := range wsu.Context.MiddlewareList {
 		next := mi.ServeHTTP(wsu.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	glog.Infoln("Middleware processing complete.")
+	glog.Infoln("Middleware processing complete")
 
 	if r.URL.Path == string(wsu.Context.WebSocketUpgradePath) {
 
@@ -118,9 +114,9 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 			if h == "" {
 				h = httpGetHeader(r.Header, constants.HeaderSecProtocolCanonical)
-				//if h != "" {
-				//	h = wsu.Context.AuthBearer + " " + h
-				//}
+				if h != "" {
+					h = wsu.Context.AuthBearer + " " + h
+				}
 			}
 
 			if h == "" {
@@ -133,6 +129,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				return
 
 			} else {
+				glog.Infoln("Authorization token found")
 				var dataMap map[string]interface{}
 
 				dataMap, ok = wsu.Context.AuthVerify.Verify([]byte(h),

@@ -27,14 +27,14 @@ func (lView *LiveView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	glog.Infoln("Processing Middleware in the LiveView.")
+	glog.Infoln("Processing Middleware in the LiveView")
 	for _, mi := range lView.Context.MiddlewareList {
 		next := mi.ServeHTTP(lView.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	glog.Infoln("Middleware processing complete.")
+	glog.Infoln("Middleware processing complete")
 
 	var output []byte
 	w.Header().Set("Content-Type", "application/json")

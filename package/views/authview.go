@@ -25,14 +25,14 @@ func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	glog.Infoln("Processing Middleware in the AuthView.")
+	glog.Infoln("Processing Middleware in the AuthView")
 	for _, mi := range authView.Context.MiddlewareList {
 		next := mi.ServeHTTP(authView.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	glog.Infoln("Middleware processing complete.")
+	glog.Infoln("Middleware processing complete")
 
 	if r.Method != http.MethodPost {
 		errorType := gqltypes.NewErrorType()
