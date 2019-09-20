@@ -12,13 +12,13 @@ import (
 
 func ShellCmdRun(cmd *cobra.Command, args []string) {
 	reader := bufio.NewReader(os.Stdin)
-	input_counter := 0
+	inputCounter := 0
 	for {
-		input_counter++
+		inputCounter++
 		fmt.Printf("%s%s%d%s%s ",
 			aurora.Bold(aurora.Green(xcore.AppName)),
 			aurora.Bold(aurora.Green("[")),
-			aurora.Bold(aurora.Red(input_counter)),
+			aurora.Bold(aurora.Red(inputCounter)),
 			aurora.Bold(aurora.Green("]")),
 			"$",
 		)

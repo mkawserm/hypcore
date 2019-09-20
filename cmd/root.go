@@ -49,7 +49,7 @@ func (hcc *HyperCoreCMD) LoadDefaultsIfNil() {
 	if hcc.VersionCMD == nil {
 		hcc.VersionCMD = &cobra.Command{
 			Use:   "version",
-			Short: "Print the version number of Hyper Core",
+			Short: "Print the version",
 			Run: func(cmd *cobra.Command, args []string) {
 				fmt.Println(aurora.Green(xcore.Version))
 			},
@@ -71,8 +71,7 @@ func (hcc *HyperCoreCMD) LoadDefaultsIfNil() {
 
 		hcc.ServerCMD = &cobra.Command{
 			Use:   "server",
-			Short: "The main server",
-			Long:  "The main HypCore server",
+			Short: "The server",
 			Run: func(cmd *cobra.Command, args []string) {
 				fmt.Println(cmd.UsageString())
 			},
@@ -117,7 +116,7 @@ func (hcc *HyperCoreCMD) LoadDefaultsIfNil() {
 	if hcc.AuthorsCMD == nil {
 		hcc.AuthorsCMD = &cobra.Command{
 			Use:   "authors",
-			Short: "Print the authors of Hyper Core",
+			Short: "Print the authors",
 			Run: func(cmd *cobra.Command, args []string) {
 				fmt.Println(aurora.Green(xcore.Authors))
 			},
@@ -163,6 +162,12 @@ func (hcc *HyperCoreCMD) Setup() {
 	hcc.HyperCoreRootCMD.AddCommand(hcc.ServerCMD)
 	hcc.HyperCoreRootCMD.AddCommand(hcc.ConfigFileCMD)
 	hcc.HyperCoreRootCMD.AddCommand(hcc.CreateSuperUserCMD)
+
+	hcc.HyperCoreRootCMD.AddCommand(&cobra.Command{
+		Use:   "hypcore",
+		Short: "About HypCore",
+		Run:   HypCoreCmdRun,
+	})
 
 	flag.CommandLine.AddGoFlagSet(goFlag.CommandLine)
 }
