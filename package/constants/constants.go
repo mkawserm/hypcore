@@ -7,7 +7,7 @@ var (
 	headerUpgrade       = "Upgrade"
 	headerConnection    = "Connection"
 	headerAuthorization = "Authorization"
-	//headerSecVersion    = "Sec-WebSocket-Version"
+	//headerSecVersion  = "Sec-WebSocket-Version"
 	headerSecProtocol = "Sec-WebSocket-Protocol"
 	//headerSecExtensions = "Sec-WebSocket-Extensions"
 	//headerSecKey        = "Sec-WebSocket-Key"

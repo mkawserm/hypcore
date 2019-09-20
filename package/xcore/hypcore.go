@@ -403,10 +403,11 @@ func (h *HypCore) Setup() {
 	}
 
 	if h.context.EnableWebSocketPath == true {
-		h.context.ServerMux.Handle(string(h.context.WebSocketUpgradePath),
-			&views.WebSocketUpgradeView{
-				Context: h.context,
-			})
+		wsu := &views.WebSocketUpgradeView{
+			Context: h.context,
+		}
+		wsu.InstallProtocolSelector()
+		h.context.ServerMux.Handle(string(h.context.WebSocketUpgradePath), wsu)
 	}
 
 	if h.context.EnableGraphQLPath == true {

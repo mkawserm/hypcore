@@ -8,10 +8,22 @@ import (
 	"github.com/mkawserm/hypcore/package/gqltypes"
 	"github.com/mkawserm/hypcore/package/mcodes"
 	"net/http"
+	"strings"
 )
 
 type WebSocketUpgradeView struct {
 	Context *core2.HContext
+}
+
+// Any JWT token with bearer is selected as protocol
+// This is a hack to pass jwt token using Sec-WebSocket-Protocol header
+func (wsu *WebSocketUpgradeView) InstallProtocolSelector() {
+	ws.DefaultHTTPUpgrader.Protocol = func(s string) bool {
+		if strings.HasPrefix(s, wsu.Context.AuthBearer) {
+			return true
+		}
+		return false
+	}
 }
 
 func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -106,9 +118,9 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 			if h == "" {
 				h = httpGetHeader(r.Header, constants.HeaderSecProtocolCanonical)
-				if h != "" {
-					h = wsu.Context.AuthBearer + " " + h
-				}
+				//if h != "" {
+				//	h = wsu.Context.AuthBearer + " " + h
+				//}
 			}
 
 			if h == "" {
