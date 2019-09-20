@@ -10,6 +10,6 @@ const hypCoreVersion = "1.0.0"
 const hypCoreAuthors = "Md Kawser Munshi"
 
 func HypCoreCmdRun(cmd *cobra.Command, args []string) {
-	fmt.Println(aurora.Green("HypCore Version: " + hypCoreVersion))
-	fmt.Println(aurora.Green("HypCore Authors: " + hypCoreAuthors))
+	fmt.Println(aurora.Red("HypCore Version: " + hypCoreVersion))
+	fmt.Println(aurora.Red("HypCore Authors: " + hypCoreAuthors))
 }
