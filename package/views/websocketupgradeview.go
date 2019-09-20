@@ -15,10 +15,21 @@ type WebSocketUpgradeView struct {
 }
 
 func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	glog.Infoln("PATH: " + r.URL.Path)
+
 	//if !cors.CheckCROSAndStepForward(wsu.Context.CORSOptions, w, r) {
 	//	glog.Infoln("CORS!!!")
 	//	return
 	//}
+
+	glog.Infoln("Processing Middleware in the WebSocketUpgradeView.")
+	for _, mi := range wsu.Context.MiddlewareList {
+		next := mi.ServeHTTP(wsu.Context, r, w)
+		if next == false {
+			return
+		}
+	}
+	glog.Infoln("Middleware processing complete.")
 
 	if r.URL.Path == string(wsu.Context.WebSocketUpgradePath) {
 

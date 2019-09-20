@@ -23,6 +23,15 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	glog.Infoln("Processing Middleware in the DynamicView.")
+	for _, mi := range dView.Context.MiddlewareList {
+		next := mi.ServeHTTP(dView.Context, r, w)
+		if next == false {
+			return
+		}
+	}
+	glog.Infoln("Middleware processing complete.")
+
 	// check for auth
 	if dView.Context.HasAuthVerify() {
 		uid := ""
@@ -74,15 +83,6 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	glog.Infoln("Processing Middleware in the DynamicView.")
-	for _, mi := range dView.Context.MiddlewareList {
-		next := mi.ServeHTTP(dView.Context, r, w)
-		if next == false {
-			return
-		}
-	}
-	glog.Infoln("Middleware processing complete.")
 
 	glog.Infoln("Dynamic route dispatch started.")
 	for _, route := range dView.Context.RouteList {

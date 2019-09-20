@@ -27,6 +27,15 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	glog.Infoln("Processing Middleware in the GraphQLView.")
+	for _, mi := range gqlView.Context.MiddlewareList {
+		next := mi.ServeHTTP(gqlView.Context, r, w)
+		if next == false {
+			return
+		}
+	}
+	glog.Infoln("Middleware processing complete.")
+
 	uid := ""
 	ok := false
 	group := ""
@@ -85,15 +94,6 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} // end of auth
-
-	glog.Infoln("Processing Middleware in the GraphQLView.")
-	for _, mi := range gqlView.Context.MiddlewareList {
-		next := mi.ServeHTTP(gqlView.Context, r, w)
-		if next == false {
-			return
-		}
-	}
-	glog.Infoln("Middleware processing complete.")
 
 	if r.Method != http.MethodPost {
 		errorType := gqltypes.NewErrorType()
