@@ -1,10 +1,12 @@
 package xcore
 
 import (
+	"errors"
 	"flag"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/golang/glog"
 	"github.com/graphql-go/graphql"
+	"github.com/mkawserm/hypcore/package/constants"
 	core2 "github.com/mkawserm/hypcore/package/core"
 	"github.com/mkawserm/hypcore/package/cors"
 	"github.com/mkawserm/hypcore/package/gqltypes"
@@ -310,11 +312,28 @@ func (h *HypCore) Setup() {
 	h.AddGraphQLQueryField("stats", &graphql.Field{
 		Type: gqltypes.StatsType,
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			canProcess := false
+			contextData := p.Context.Value("contextData").(map[string]interface{})
+			hasAuthVerify, _ := contextData["hasAuthVerify"].(bool)
 
-			return &gqltypes.Stats{
-				TotalWebSocketConnection: h.context.TotalActiveWebSocketConnections(),
-			}, nil
+			if hasAuthVerify {
+				auth := contextData["auth"].(map[string]string)
+				if group, ok2 := auth["group"]; ok2 {
+					if group == constants.SuperGroup {
+						canProcess = true
+					}
+				}
+			} else {
+				canProcess = true
+			}
 
+			if canProcess {
+				return &gqltypes.Stats{
+					TotalWebSocketConnection: h.context.TotalActiveWebSocketConnections(),
+				}, nil
+			} else {
+				return nil, errors.New("access denied")
+			}
 		},
 		Description: "Server statistics",
 	})
@@ -335,9 +354,28 @@ func (h *HypCore) Setup() {
 			},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-			live := params.Args["live"].(bool)
-			h.context.SetIsLive(live)
-			return h.context.GetIsLive(), nil
+			canProcess := false
+			contextData := params.Context.Value("contextData").(map[string]interface{})
+			hasAuthVerify, _ := contextData["hasAuthVerify"].(bool)
+
+			if hasAuthVerify {
+				auth := contextData["auth"].(map[string]string)
+				if group, ok2 := auth["group"]; ok2 {
+					if group == constants.SuperGroup {
+						canProcess = true
+					}
+				}
+			} else {
+				canProcess = true
+			}
+
+			if canProcess {
+				live := params.Args["live"].(bool)
+				h.context.SetIsLive(live)
+				return h.context.GetIsLive(), nil
+			} else {
+				return nil, errors.New("access denied")
+			}
 		},
 		Description: "Update service availability",
 	})
