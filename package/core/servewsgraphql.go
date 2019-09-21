@@ -29,6 +29,8 @@ func (serveWSGraphQL *ServeWSGraphQL) ServeWS(ctx *HContext, connectionId int, m
 
 	var params graphql.Params
 	contextData := make(map[string]interface{})
+	contextData["hasAuthVerify"] = ctx.HasAuthVerify()
+
 	contextData["auth"] = map[string]string{
 		"uid":   ctx.GetUIDFromSID(connectionId),
 		"group": ctx.GetGroupFromSID(connectionId)}

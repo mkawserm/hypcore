@@ -131,6 +131,7 @@ func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	contextData := make(map[string]interface{})
 	contextData["auth"] = map[string]string{"uid": uid, "group": group}
+	contextData["hasAuthVerify"] = gqlView.Context.HasAuthVerify()
 
 	if gqlView.Context.EnableTLS {
 		contextData["connectionTpe"] = constants.HTTPSConnection
