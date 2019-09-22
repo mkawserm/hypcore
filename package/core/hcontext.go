@@ -16,8 +16,8 @@ type HContext struct {
 	Host string // read only
 	Port string // read only
 
-	EventQueueSize int //read only
-	WaitingTime    int //read only
+	EPollEventQueueSize int //read only
+	EPollWaitingTime    int //read only
 
 	EnableTLS bool   //read only
 	CertFile  string //read only

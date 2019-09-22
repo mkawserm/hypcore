@@ -8,6 +8,7 @@
       <w>crit</w>
       <w>cros</w>
       <w>debugf</w>
+      <w>epoll</w>
       <w>errorf</w>
       <w>glog</w>
       <w>godeps</w>

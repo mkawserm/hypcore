@@ -25,10 +25,10 @@ type HypCore struct {
 }
 
 type HypCoreConfig struct {
-	Host           string
-	Port           string
-	EventQueueSize int
-	WaitingTime    int
+	Host                string
+	Port                string
+	EPollEventQueueSize int
+	EPollWaitingTime    int
 
 	EnableTLS bool
 	CertFile  string
@@ -141,10 +141,10 @@ func NewHypCore(hc *HypCoreConfig) *HypCore {
 	}
 
 	hContext := &core2.HContext{
-		Host:           hc.Host,
-		Port:           hc.Port,
-		EventQueueSize: hc.EventQueueSize,
-		WaitingTime:    hc.WaitingTime,
+		Host:                hc.Host,
+		Port:                hc.Port,
+		EPollEventQueueSize: hc.EPollEventQueueSize,
+		EPollWaitingTime:    hc.EPollWaitingTime,
 
 		EnableTLS: hc.EnableTLS,
 		CertFile:  hc.CertFile,
@@ -413,19 +413,19 @@ func (h *HypCore) Setup() {
 
 	h.context.AuthSchema = &authSchema
 
-	if h.context.EventQueueSize == 0 {
-		h.context.EventQueueSize = 100
+	if h.context.EPollEventQueueSize == 0 {
+		h.context.EPollEventQueueSize = 100
 	}
 
-	if h.context.WaitingTime == 0 {
-		h.context.WaitingTime = 100
+	if h.context.EPollWaitingTime == 0 {
+		h.context.EPollWaitingTime = 100
 	}
 
 	var err error
 
 	h.context.ConnectionEventPool, err = core2.MakeCustomEventPool(
-		h.context.EventQueueSize,
-		h.context.WaitingTime)
+		h.context.EPollEventQueueSize,
+		h.context.EPollWaitingTime)
 
 	if err != nil {
 		panic(err)

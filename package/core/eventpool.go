@@ -15,8 +15,8 @@ type EventPool struct {
 
 	lock *sync.RWMutex
 
-	eventQueueSize int
-	waitingTime    int
+	epollEventQueueSize int
+	epollWaitingTime    int
 }
 
 func MakeEventPool() (*EventPool, error) {
@@ -27,16 +27,16 @@ func MakeEventPool() (*EventPool, error) {
 	}
 
 	return &EventPool{
-		fd:             fd,
-		lock:           &sync.RWMutex{},
-		connectionMap:  make(map[int]net.Conn),
-		eventQueueSize: 100,
-		waitingTime:    100,
+		fd:                  fd,
+		lock:                &sync.RWMutex{},
+		connectionMap:       make(map[int]net.Conn),
+		epollEventQueueSize: 100,
+		epollWaitingTime:    100,
 	}, nil
 
 }
 
-func MakeCustomEventPool(eventQueueSize int, waitingTime int) (*EventPool, error) {
+func MakeCustomEventPool(epollEventQueueSize int, epollWaitingTime int) (*EventPool, error) {
 	fd, err := unix.EpollCreate1(0)
 
 	if err != nil {
@@ -44,11 +44,11 @@ func MakeCustomEventPool(eventQueueSize int, waitingTime int) (*EventPool, error
 	}
 
 	return &EventPool{
-		fd:             fd,
-		lock:           &sync.RWMutex{},
-		connectionMap:  make(map[int]net.Conn),
-		eventQueueSize: eventQueueSize,
-		waitingTime:    waitingTime,
+		fd:                  fd,
+		lock:                &sync.RWMutex{},
+		connectionMap:       make(map[int]net.Conn),
+		epollEventQueueSize: epollEventQueueSize,
+		epollWaitingTime:    epollWaitingTime,
 	}, nil
 
 }
@@ -112,8 +112,8 @@ func (e *EventPool) RemoveConnection(conn net.Conn) error {
 }
 
 func (e *EventPool) Wait() ([]net.Conn, error) {
-	events := make([]unix.EpollEvent, e.eventQueueSize)
-	n, err := unix.EpollWait(e.fd, events, e.waitingTime)
+	events := make([]unix.EpollEvent, e.epollEventQueueSize)
+	n, err := unix.EpollWait(e.fd, events, e.epollWaitingTime)
 
 	if err != nil {
 		return nil, err

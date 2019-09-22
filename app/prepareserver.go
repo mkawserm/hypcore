@@ -10,8 +10,8 @@ func PrepareServer(v *viper.Viper) *xcore.HypCore {
 		Host: v.GetString("server.host"),
 		Port: v.GetString("server.port"),
 
-		EventQueueSize: v.GetInt("server.eventQueueSize"),
-		WaitingTime:    v.GetInt("server.waitingTime"),
+		EPollEventQueueSize: v.GetInt("server.epollEventQueueSize"),
+		EPollWaitingTime:    v.GetInt("server.epollWaitingTime"),
 
 		EnableTLS: v.GetBool("server.tls"),
 		CertFile:  v.GetString("server.certFile"),

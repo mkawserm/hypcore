@@ -58,6 +58,9 @@ func NewConfigFile(configFilePath string, configFileName string) *viper.Viper {
 	v.SetDefault("server.eventQueueSize", 100)
 	v.SetDefault("server.waitingTime", 100)
 
+	v.SetDefault("server.epollEventQueueSize", 100)
+	v.SetDefault("server.epollWaitingTime", 100)
+
 	v.SetDefault("db.path", ConfigFilePathFirst+"/db")
 
 	v.SetDefault("auth.bearer", "JWT")
