@@ -179,7 +179,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["cpu","unix"]
-  revision = "ef0ce1748380fdf001bd0ff86a45329a12945357"
+  revision = "0a153f010e6963173baba2306531d173aa843137"
 
 [[projects]]
   name = "golang.org/x/text"
