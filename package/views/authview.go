@@ -18,21 +18,21 @@ type AuthView struct {
 }
 
 func (authView *AuthView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	glog.Infoln("PATH: " + r.URL.Path)
+	glog.Infof("PATH: " + r.URL.Path + "\n")
 
 	if !cors.CheckCROSAndStepForward(authView.Context.CORSOptions, w, r) {
-		glog.Infoln("CORS!!!")
+		glog.Infof("CORS!!! \n")
 		return
 	}
 
-	glog.Infoln("Processing Middleware in the AuthView")
+	glog.Infof("Processing Middleware in the AuthView\n")
 	for _, mi := range authView.Context.MiddlewareList {
 		next := mi.ServeHTTP(authView.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	glog.Infoln("Middleware processing complete")
+	glog.Infof("Middleware processing complete\n")
 
 	if r.Method != http.MethodPost {
 		errorType := gqltypes.NewErrorType()

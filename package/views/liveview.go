@@ -12,7 +12,7 @@ type LiveView struct {
 }
 
 func (lView *LiveView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	glog.Infoln("PATH: " + r.URL.Path)
+	glog.Infof("PATH: " + r.URL.Path + "\n")
 	//log.Printf("PATH: " + r.URL.Path)
 	//log.Printf("Processing Middleware in the Live View.")
 	//for _, mi := range l.Context.MiddlewareList {
@@ -23,18 +23,18 @@ func (lView *LiveView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//}
 	//log.Printf("Middleware processing complete.")
 	if !cors.CheckCROSAndStepForward(lView.Context.CORSOptions, w, r) {
-		glog.Infoln("CORS!!!")
+		glog.Infof("CORS!!!\n")
 		return
 	}
 
-	glog.Infoln("Processing Middleware in the LiveView")
+	glog.Infof("Processing Middleware in the LiveView\n")
 	for _, mi := range lView.Context.MiddlewareList {
 		next := mi.ServeHTTP(lView.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	glog.Infoln("Middleware processing complete")
+	glog.Infof("Middleware processing complete\n")
 
 	var output []byte
 	w.Header().Set("Content-Type", "application/json")

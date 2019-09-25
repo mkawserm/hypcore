@@ -20,21 +20,21 @@ type GraphQLView struct {
 }
 
 func (gqlView *GraphQLView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	glog.Infoln("PATH: " + r.URL.Path)
+	glog.Infof("PATH: " + r.URL.Path + "\n")
 
 	if !cors.CheckCROSAndStepForward(gqlView.Context.CORSOptions, w, r) {
-		glog.Infoln("CORS!!!")
+		glog.Infof("CORS!!!\n")
 		return
 	}
 
-	glog.Infoln("Processing Middleware in the GraphQLView")
+	glog.Infof("Processing Middleware in the GraphQLView\n")
 	for _, mi := range gqlView.Context.MiddlewareList {
 		next := mi.ServeHTTP(gqlView.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	glog.Infoln("Middleware processing complete")
+	glog.Infof("Middleware processing complete\n")
 
 	uid := ""
 	ok := false

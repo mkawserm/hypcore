@@ -16,21 +16,21 @@ type DynamicView struct {
 }
 
 func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	glog.Infoln("PATH: " + r.URL.Path)
+	glog.Infof("PATH: " + r.URL.Path + "\n")
 
 	if !cors.CheckCROSAndStepForward(dView.Context.CORSOptions, w, r) {
-		glog.Infoln("CORS!!!")
+		glog.Infof("CORS!!!\n")
 		return
 	}
 
-	glog.Infoln("Processing Middleware in the DynamicView")
+	glog.Infof("Processing Middleware in the DynamicView \n")
 	for _, mi := range dView.Context.MiddlewareList {
 		next := mi.ServeHTTP(dView.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	glog.Infoln("Middleware processing complete")
+	glog.Infof("Middleware processing complete\n")
 
 	// check for auth
 	if dView.Context.HasAuthVerify() {
@@ -84,7 +84,7 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	glog.Infoln("Dynamic route dispatch started")
+	glog.Infof("Dynamic route dispatch started\n")
 	for _, route := range dView.Context.RouteList {
 		var rc = regexp.MustCompile(route.Pattern)
 		if rc.Match([]byte(r.URL.Path)) {
@@ -93,8 +93,8 @@ func (dView *DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	glog.Infoln("Dynamic route dispatch failed to find a route")
-	glog.Errorln("Showing 404 Http Error")
+	glog.Infof("Dynamic route dispatch failed to find a route\n")
+	glog.Errorf("Showing 404 Http Error\n")
 
 	errorType := gqltypes.NewErrorType()
 	errorType.Group = mcodes.DynamicViewGroupCode

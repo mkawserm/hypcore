@@ -23,21 +23,21 @@ func (wsu *WebSocketUpgradeView) InstallProtocolSelector() {
 }
 
 func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	glog.Infoln("PATH: " + r.URL.Path)
+	glog.Infof("PATH: " + r.URL.Path + "\n")
 
 	//if !cors.CheckCROSAndStepForward(wsu.Context.CORSOptions, w, r) {
 	//	glog.Infoln("CORS!!!")
 	//	return
 	//}
 
-	glog.Infoln("Processing Middleware in the WebSocketUpgradeView")
+	glog.Infof("Processing Middleware in the WebSocketUpgradeView\n")
 	for _, mi := range wsu.Context.MiddlewareList {
 		next := mi.ServeHTTP(wsu.Context, r, w)
 		if next == false {
 			return
 		}
 	}
-	glog.Infoln("Middleware processing complete")
+	glog.Infof("Middleware processing complete\n")
 
 	if r.URL.Path == string(wsu.Context.WebSocketUpgradePath) {
 
@@ -129,7 +129,7 @@ func (wsu *WebSocketUpgradeView) ServeHTTP(w http.ResponseWriter, r *http.Reques
 				return
 
 			} else {
-				glog.Infoln("Authorization token found")
+				glog.Infof("Authorization token found\n")
 				var dataMap map[string]interface{}
 
 				dataMap, ok = wsu.Context.AuthVerify.Verify([]byte(h),
