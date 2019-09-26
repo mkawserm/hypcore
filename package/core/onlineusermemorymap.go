@@ -113,3 +113,22 @@ func (o *OnlineUserMemoryMap) GetGroupFromSID(sid int) string {
 		return ""
 	}
 }
+
+func (o *OnlineUserMemoryMap) GetUIDList() []string {
+	o.UserMapLock.RLock()
+	defer o.UserMapLock.RUnlock()
+
+	var uidList []string
+	for user, _ := range o.UserMap {
+		uidList = append(uidList, user)
+	}
+
+	return uidList
+}
+
+func (o *OnlineUserMemoryMap) GetTotalUID() int {
+	o.UserMapLock.RLock()
+	defer o.UserMapLock.RUnlock()
+
+	return len(o.UserMap)
+}

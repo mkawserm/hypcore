@@ -137,6 +137,37 @@ func (e *EventPool) TotalActiveWebSocketConnections() int {
 	return len(e.connectionMap)
 }
 
+func (e *EventPool) GetWebSocketConnectionIdSlice() []int {
+	e.lock.RLock()
+	defer e.lock.RUnlock()
+	var idList []int
+
+	for i, _ := range e.connectionMap {
+		idList = append(idList, i)
+	}
+
+	return idList
+}
+
+func (e *EventPool) GetWebSocketConnectionSlice() []net.Conn {
+	e.lock.RLock()
+	defer e.lock.RUnlock()
+	var connections []net.Conn
+
+	for _, con := range e.connectionMap {
+		connections = append(connections, con)
+	}
+
+	return connections
+}
+
+func (e *EventPool) GetWebSocketConnectionMap() map[int]net.Conn {
+	e.lock.RLock()
+	defer e.lock.RUnlock()
+
+	return e.connectionMap
+}
+
 func WebsocketFileDescriptor(conn net.Conn) int {
 	tcpConn := reflect.Indirect(reflect.ValueOf(conn)).FieldByName("conn")
 	fdVal := tcpConn.FieldByName("fd")

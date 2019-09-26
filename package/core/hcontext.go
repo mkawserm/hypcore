@@ -172,6 +172,22 @@ func (c *HContext) GetGroupFromSID(sid int) string {
 	}
 }
 
+func (c *HContext) GetUIDList() []string {
+	if c.OnlineUserDataStore != nil {
+		return c.OnlineUserDataStore.GetUIDList()
+	} else {
+		return make([]string, 0)
+	}
+}
+
+func (c *HContext) GetTotalUID() int {
+	if c.OnlineUserDataStore != nil {
+		return c.OnlineUserDataStore.GetTotalUID()
+	} else {
+		return 0
+	}
+}
+
 func (c *HContext) WriteMessage(connectionId int, message []byte) {
 	conn, ok := c.GetConnection(connectionId)
 	if ok {
@@ -241,10 +257,6 @@ func (c *HContext) SetKeyValueStore(dataMap map[string]string) {
 	c.Lock.Lock()
 	defer c.Lock.Unlock()
 	c.KeyValueStore = dataMap
-}
-
-func (c *HContext) TotalActiveWebSocketConnections() int {
-	return c.ConnectionEventPool.TotalActiveWebSocketConnections()
 }
 
 func (c *HContext) SaveToStorage(key []byte, value []byte) bool {
@@ -344,4 +356,20 @@ func (c *HContext) IsObjectExists(obj interface{}) bool {
 
 	key := GetPk(obj)
 	return c.StorageEngine.IsExists([]byte(key))
+}
+
+func (c *HContext) TotalActiveWebSocketConnections() int {
+	return c.ConnectionEventPool.TotalActiveWebSocketConnections()
+}
+
+func (c *HContext) GetWebSocketConnectionIdSlice() []int {
+	return c.ConnectionEventPool.GetWebSocketConnectionIdSlice()
+}
+
+func (c *HContext) GetWebSocketConnectionSlice() []net.Conn {
+	return c.ConnectionEventPool.GetWebSocketConnectionSlice()
+}
+
+func (c *HContext) GetWebSocketConnectionMap() map[int]net.Conn {
+	return c.ConnectionEventPool.GetWebSocketConnectionMap()
 }

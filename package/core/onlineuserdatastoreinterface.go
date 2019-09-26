@@ -6,4 +6,7 @@ type OnlineUserDataStoreInterface interface {
 	GetIdList(uid string) []int
 	GetUIDFromSID(sid int) string
 	GetGroupFromSID(sid int) string
+
+	GetUIDList() []string
+	GetTotalUID() int
 }
