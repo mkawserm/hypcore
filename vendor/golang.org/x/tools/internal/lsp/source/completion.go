@@ -104,11 +104,21 @@ type matcher interface {
 	Score(candidateLabel string) (score float32)
 }
 
-// prefixMatcher implements case insensitive prefix matching.
+// prefixMatcher implements case sensitive prefix matching.
 type prefixMatcher string
 
 func (pm prefixMatcher) Score(candidateLabel string) float32 {
-	if strings.HasPrefix(strings.ToLower(candidateLabel), string(pm)) {
+	if strings.HasPrefix(candidateLabel, string(pm)) {
+		return 1
+	}
+	return -1
+}
+
+// insensitivePrefixMatcher implements case insensitive prefix matching.
+type insensitivePrefixMatcher string
+
+func (ipm insensitivePrefixMatcher) Score(candidateLabel string) float32 {
+	if strings.HasPrefix(strings.ToLower(candidateLabel), string(ipm)) {
 		return 1
 	}
 	return -1
@@ -116,7 +126,8 @@ func (pm prefixMatcher) Score(candidateLabel string) float32 {
 
 // completer contains the necessary information for a single completion request.
 type completer struct {
-	pkg Package
+	snapshot Snapshot
+	pkg      Package
 
 	qf   types.Qualifier
 	opts CompletionOptions
@@ -215,6 +226,10 @@ func (p Selection) Prefix() string {
 	return p.content[:p.cursor-p.spanRange.Start]
 }
 
+func (p Selection) Suffix() string {
+	return p.content[p.cursor-p.spanRange.Start:]
+}
+
 func (c *completer) setSurrounding(ident *ast.Ident) {
 	if c.surrounding != nil {
 		return
@@ -222,19 +237,23 @@ func (c *completer) setSurrounding(ident *ast.Ident) {
 	if !(ident.Pos() <= c.pos && c.pos <= ident.End()) {
 		return
 	}
+
 	c.surrounding = &Selection{
 		content: ident.Name,
 		cursor:  c.pos,
 		mappedRange: mappedRange{
-			spanRange: span.NewRange(c.view.Session().Cache().FileSet(), ident.Pos(), ident.End()),
+			// Overwrite the prefix only.
+			spanRange: span.NewRange(c.view.Session().Cache().FileSet(), ident.Pos(), c.pos),
 			m:         c.mapper,
 		},
 	}
 
 	if c.opts.FuzzyMatching {
 		c.matcher = fuzzy.NewMatcher(c.surrounding.Prefix(), fuzzy.Symbol)
+	} else if c.opts.CaseSensitive {
+		c.matcher = prefixMatcher(c.surrounding.Prefix())
 	} else {
-		c.matcher = prefixMatcher(strings.ToLower(c.surrounding.Prefix()))
+		c.matcher = insensitivePrefixMatcher(strings.ToLower(c.surrounding.Prefix()))
 	}
 }
 
@@ -364,13 +383,13 @@ func (e ErrIsDefinition) Error() string {
 // The selection is computed based on the preceding identifier and can be used by
 // the client to score the quality of the completion. For instance, some clients
 // may tolerate imperfect matches as valid completion results, since users may make typos.
-func Completion(ctx context.Context, view View, f GoFile, pos protocol.Position, opts CompletionOptions) ([]CompletionItem, *Selection, error) {
+func Completion(ctx context.Context, view View, f File, pos protocol.Position, opts CompletionOptions) ([]CompletionItem, *Selection, error) {
 	ctx, done := trace.StartSpan(ctx, "source.Completion")
 	defer done()
 
 	startTime := time.Now()
 
-	cphs, err := f.CheckPackageHandles(ctx)
+	snapshot, cphs, err := view.CheckPackageHandles(ctx, f)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -415,6 +434,7 @@ func Completion(ctx context.Context, view View, f GoFile, pos protocol.Position,
 	clInfo := enclosingCompositeLiteral(path, rng.Start, pkg.GetTypesInfo())
 	c := &completer{
 		pkg:                       pkg,
+		snapshot:                  snapshot,
 		qf:                        qualifier(file, pkg.GetTypes(), pkg.GetTypesInfo()),
 		view:                      view,
 		ctx:                       ctx,

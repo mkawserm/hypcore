@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/tools/internal/lsp/diff"
+	"golang.org/x/tools/internal/lsp/diff/myers"
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/telemetry/tag"
 	errors "golang.org/x/xerrors"
@@ -40,6 +42,7 @@ var (
 			FuzzyMatching: true,
 			Budget:        100 * time.Millisecond,
 		},
+		ComputeEdits: myers.ComputeEdits,
 	}
 )
 
@@ -71,11 +74,14 @@ type Options struct {
 	TextDocumentSyncKind protocol.TextDocumentSyncKind
 
 	Completion CompletionOptions
+
+	ComputeEdits diff.ComputeEdits
 }
 
 type CompletionOptions struct {
 	Deep              bool
 	FuzzyMatching     bool
+	CaseSensitive     bool
 	Unimported        bool
 	Documentation     bool
 	FullDocumentation bool
@@ -200,6 +206,8 @@ func (o *Options) set(name string, value interface{}) OptionResult {
 		result.setBool(&o.Completion.Deep)
 	case "fuzzyMatching":
 		result.setBool(&o.Completion.FuzzyMatching)
+	case "caseSensitiveCompletion":
+		result.setBool(&o.Completion.CaseSensitive)
 	case "completeUnimported":
 		result.setBool(&o.Completion.Unimported)
 

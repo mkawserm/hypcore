@@ -10,8 +10,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/alexandrevicenzi/unchained"
-  packages = [".","argon2","bcrypt","pbkdf2"]
-  revision = "ecd422680cf19d7600537dc1558ee2ea797ef520"
+  packages = [".","argon2","bcrypt","md5","pbkdf2","sha1"]
+  revision = "9aea2f5643b954745fbcff71a58a894aa854a0d4"
 
 [[projects]]
   name = "github.com/dgraph-io/badger"
@@ -107,7 +107,7 @@
   branch = "master"
   name = "github.com/mmcloughlin/avo"
   packages = ["attr","build","buildtags","gotypes","internal/prnt","internal/stack","ir","operand","pass","printer","reg","src","x86"]
-  revision = "c8004ba627cacd7bab12cf9243c2f14d89c71cbe"
+  revision = "15d6a9a17e5386cb169227dd4dea9a23100a5029"
 
 [[projects]]
   name = "github.com/pascaldekloe/jwt"
@@ -167,19 +167,19 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["argon2","bcrypt","blake2b","blowfish","pbkdf2"]
-  revision = "9ee001bba392397c76f100a2d5b13afc86f167f1"
+  revision = "34f69633bfdcf9db92f698f8487115767eebef81"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["internal/timeseries","trace"]
-  revision = "aa69164e4478b84860dc6769c710c699c67058a3"
+  revision = "d98b1b4438230571bd7fbc5aaa89843e92937bd3"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["cpu","unix"]
-  revision = "2837fb4f24fee082b8c39b1a6dc9e0ed9f3fbd4f"
+  revision = "c178f38b412c7b426e4e97be2e75d11ff7b8d4d4"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -191,13 +191,13 @@
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","go/gcexportdata","go/internal/gcimporter","go/internal/packagesdriver","go/packages","go/types/typeutil","internal/fastwalk","internal/gopathwalk","internal/semver"]
-  revision = "ea99b82c7b93d10d6b83cfbb3543a570b10dd0ac"
+  revision = "c9f9432ec4b21a28c4d47f172513698febb68e9c"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
-  version = "v2.2.2"
+  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
+  version = "v2.2.4"
 
 [solve-meta]
   analyzer-name = "dep"
