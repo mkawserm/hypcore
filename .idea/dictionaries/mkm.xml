@@ -12,6 +12,7 @@
       <w>errorf</w>
       <w>glog</w>
       <w>godeps</w>
+      <w>goflags</w>
       <w>golangci</w>
       <w>gopath</w>
       <w>hasher</w>

@@ -4,7 +4,7 @@ language: go
 
 env:
   - GO111MODULE=on
-  - GOFLAGS='-mod vendor'
+#  - GOFLAGS='-mod vendor'
 
 go:
 - "1.13.6"
@@ -13,7 +13,7 @@ sudo: false
 
 # Skip the install step. Don't `go get` dependencies. Only build with the code
 # in vendor/
-install: true
+install: false
 
 # Don't email me the results of the test runs.
 notifications:
@@ -24,7 +24,7 @@ before_script:
 
 script:
 #  - golangci-lint run       # run a bunch of code checkers/linters in parallel
-  - go mod init
+#  - go mod init
   - GOOS=linux GOARCH=amd64 go build .  # Run all the tests with the race detector enabled
 
 #install:
