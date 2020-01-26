@@ -1,5 +1,10 @@
-# HypCore
+<p align="center"><img src="https://travis-ci.com/mkawserm/hypcore.svg?branch=master"></img></p>
+
+# HypCore 
+
+
 Hyper Core is a small reusable high performance websocket and graphql focused golang package
+
 
 
 
