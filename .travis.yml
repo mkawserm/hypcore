@@ -24,6 +24,7 @@ before_script:
 
 script:
 #  - golangci-lint run       # run a bunch of code checkers/linters in parallel
+  - go mod init
   - GOOS=linux GOARCH=amd64 go build .  # Run all the tests with the race detector enabled
 
 #install:
