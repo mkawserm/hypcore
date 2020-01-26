@@ -1,7 +1,3 @@
-// Copyright 2019 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package deep
 
 import "context"
@@ -29,7 +25,7 @@ func _() {
 	context.Background() //@item(ctxBackground, "context.Background", "func() context.Context", "func", "Background returns a non-nil, empty Context.")
 	context.TODO()       //@item(ctxTODO, "context.TODO", "func() context.Context", "func", "TODO returns a non-nil, empty Context.")
 
-	wantsContext(c) //@rank(")", ctxBackground, ctxTODO)
+	wantsContext(c) //@rank(")", ctxBackground),rank(")", ctxTODO)
 }
 
 func _() {
@@ -38,7 +34,7 @@ func _() {
 		*deepCircle
 	}
 	var circle deepCircle   //@item(deepCircle, "circle", "deepCircle", "var")
-	circle.deepCircle       //@item(deepCircleField, "circle.deepCircle", "*deepCircle", "field", "deepCircle is circular.")
+	*circle.deepCircle      //@item(deepCircleField, "*circle.deepCircle", "*deepCircle", "field", "deepCircle is circular.")
 	var _ deepCircle = circ //@deep(" //", deepCircle, deepCircleField)
 }
 
@@ -87,4 +83,39 @@ func _() {
 	// "a.d" should be ranked above the deeper "a.b.c"
 	var i int
 	i = a //@deep(" //", deepAD, deepABC, deepA, deepAB)
+}
+
+type foo struct {
+	b bar
+}
+
+func (f foo) bar() bar {
+	return f.b
+}
+
+func (f foo) barPtr() *bar {
+	return &f.b
+}
+
+type bar struct{}
+
+func (b bar) valueReceiver() int {
+	return 0
+}
+
+func (b *bar) ptrReceiver() int {
+	return 0
+}
+
+func _() {
+	var (
+		i int
+		f foo
+	)
+
+	f.b.ptrReceiver()      //@item(deepBPtr, "f.b.ptrReceiver", "func() int", "method")
+	f.bar().valueReceiver  //@item(deepBarValue, "f.bar().valueReceiver", "func() int", "method")
+	f.barPtr().ptrReceiver //@item(deepBarPtrPtr, "f.barPtr().ptrReceiver", "func() int", "method")
+
+	i = fb //@fuzzy(" //", deepBPtr, deepBarValue, deepBarPtrPtr)
 }

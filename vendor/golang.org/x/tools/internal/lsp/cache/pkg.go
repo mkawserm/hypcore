@@ -8,11 +8,7 @@ import (
 	"context"
 	"go/ast"
 	"go/types"
-	"sort"
-	"sync"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/span"
@@ -21,27 +17,18 @@ import (
 
 // pkg contains the type information needed by the source package.
 type pkg struct {
-	view *view
-
 	// ID and package path have their own types to avoid being used interchangeably.
-	id         packageID
-	pkgPath    packagePath
-	files      []source.ParseGoHandle
-	errors     []packages.Error
-	imports    map[packagePath]*pkg
-	types      *types.Package
-	typesInfo  *types.Info
-	typesSizes types.Sizes
+	id      packageID
+	pkgPath packagePath
+	mode    source.ParseMode
 
-	// The analysis cache holds analysis information for all the packages in a view.
-	// Each graph node (action) is one unit of analysis.
-	// Edges express package-to-package (vertical) dependencies,
-	// and analysis-to-analysis (horizontal) dependencies.
-	mu       sync.Mutex
-	analyses map[*analysis.Analyzer]*analysisEntry
-
-	diagMu      sync.Mutex
-	diagnostics map[*analysis.Analyzer][]source.Diagnostic
+	goFiles         []source.ParseGoHandle
+	compiledGoFiles []source.ParseGoHandle
+	errors          []*source.Error
+	imports         map[packagePath]*pkg
+	types           *types.Package
+	typesInfo       *types.Info
+	typesSizes      types.Sizes
 }
 
 // Declare explicit types for package paths and IDs to ensure that we never use
@@ -50,94 +37,10 @@ type pkg struct {
 type packageID string
 type packagePath string
 
-type analysisEntry struct {
-	done      chan struct{}
-	succeeded bool
-	*source.Action
-}
-
-func (p *pkg) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*source.Action, error) {
-	p.mu.Lock()
-	e, ok := p.analyses[a]
-	if ok {
-		// cache hit
-		p.mu.Unlock()
-
-		// wait for entry to become ready or the context to be cancelled
-		select {
-		case <-e.done:
-			// If the goroutine we are waiting on was cancelled, we should retry.
-			// If errors other than cancelation/timeout become possible, it may
-			// no longer be appropriate to always retry here.
-			if !e.succeeded {
-				return p.GetActionGraph(ctx, a)
-			}
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		}
-	} else {
-		// cache miss
-		e = &analysisEntry{
-			done: make(chan struct{}),
-			Action: &source.Action{
-				Analyzer: a,
-				Pkg:      p,
-			},
-		}
-		p.analyses[a] = e
-		p.mu.Unlock()
-
-		defer func() {
-			// If we got an error, clear out our defunct cache entry. We don't cache
-			// errors since they could depend on our dependencies, which can change.
-			// Currently the only possible error is context.Canceled, though, which
-			// should also not be cached.
-			if !e.succeeded {
-				p.mu.Lock()
-				delete(p.analyses, a)
-				p.mu.Unlock()
-			}
-
-			// Always close done so waiters don't get stuck.
-			close(e.done)
-		}()
-
-		// This goroutine becomes responsible for populating
-		// the entry and broadcasting its readiness.
-
-		// Add a dependency on each required analyzers.
-		for _, req := range a.Requires {
-			act, err := p.GetActionGraph(ctx, req)
-			if err != nil {
-				return nil, err
-			}
-			e.Deps = append(e.Deps, act)
-		}
-
-		// An analysis that consumes/produces facts
-		// must run on the package's dependencies too.
-		if len(a.FactTypes) > 0 {
-			importPaths := make([]string, 0, len(p.imports))
-			for importPath := range p.imports {
-				importPaths = append(importPaths, string(importPath))
-			}
-			sort.Strings(importPaths) // for determinism
-			for _, importPath := range importPaths {
-				dep, err := p.GetImport(ctx, importPath)
-				if err != nil {
-					return nil, err
-				}
-				act, err := dep.GetActionGraph(ctx, a)
-				if err != nil {
-					return nil, err
-				}
-				e.Deps = append(e.Deps, act)
-			}
-		}
-		e.succeeded = true
-	}
-	return e.Action, nil
-}
+// Declare explicit types for files and directories to distinguish between the two.
+type fileURI span.URI
+type directoryURI span.URI
+type viewLoadScope span.URI
 
 func (p *pkg) ID() string {
 	return string(p.id)
@@ -147,12 +50,17 @@ func (p *pkg) PkgPath() string {
 	return string(p.pkgPath)
 }
 
-func (p *pkg) Files() []source.ParseGoHandle {
-	return p.files
+func (p *pkg) CompiledGoFiles() []source.ParseGoHandle {
+	return p.compiledGoFiles
 }
 
 func (p *pkg) File(uri span.URI) (source.ParseGoHandle, error) {
-	for _, ph := range p.Files() {
+	for _, ph := range p.compiledGoFiles {
+		if ph.File().Identity().URI == uri {
+			return ph, nil
+		}
+	}
+	for _, ph := range p.goFiles {
 		if ph.File().Identity().URI == uri {
 			return ph, nil
 		}
@@ -160,10 +68,10 @@ func (p *pkg) File(uri span.URI) (source.ParseGoHandle, error) {
 	return nil, errors.Errorf("no ParseGoHandle for %s", uri)
 }
 
-func (p *pkg) GetSyntax(ctx context.Context) []*ast.File {
+func (p *pkg) GetSyntax() []*ast.File {
 	var syntax []*ast.File
-	for _, ph := range p.files {
-		file, _, _, err := ph.Cached(ctx)
+	for _, ph := range p.compiledGoFiles {
+		file, _, _, err := ph.Cached()
 		if err == nil {
 			syntax = append(syntax, file)
 		}
@@ -171,7 +79,7 @@ func (p *pkg) GetSyntax(ctx context.Context) []*ast.File {
 	return syntax
 }
 
-func (p *pkg) GetErrors() []packages.Error {
+func (p *pkg) GetErrors() []*source.Error {
 	return p.errors
 }
 
@@ -191,7 +99,7 @@ func (p *pkg) IsIllTyped() bool {
 	return p.types == nil || p.typesInfo == nil || p.typesSizes == nil
 }
 
-func (p *pkg) GetImport(ctx context.Context, pkgPath string) (source.Package, error) {
+func (p *pkg) GetImport(pkgPath string) (source.Package, error) {
 	if imp := p.imports[packagePath(pkgPath)]; imp != nil {
 		return imp, nil
 	}
@@ -199,60 +107,38 @@ func (p *pkg) GetImport(ctx context.Context, pkgPath string) (source.Package, er
 	return nil, errors.Errorf("no imported package for %s", pkgPath)
 }
 
-func (p *pkg) SetDiagnostics(a *analysis.Analyzer, diags []source.Diagnostic) {
-	p.diagMu.Lock()
-	defer p.diagMu.Unlock()
-	if p.diagnostics == nil {
-		p.diagnostics = make(map[*analysis.Analyzer][]source.Diagnostic)
+func (p *pkg) Imports() []source.Package {
+	var result []source.Package
+	for _, imp := range p.imports {
+		result = append(result, imp)
 	}
-	p.diagnostics[a] = diags
+	return result
 }
 
-func (pkg *pkg) FindDiagnostic(pdiag protocol.Diagnostic) (*source.Diagnostic, error) {
-	pkg.diagMu.Lock()
-	defer pkg.diagMu.Unlock()
-
-	for a, diagnostics := range pkg.diagnostics {
-		if a.Name != pdiag.Source {
+func (s *snapshot) FindAnalysisError(ctx context.Context, pkgID, analyzerName, msg string, rng protocol.Range) (*source.Error, error) {
+	analyzer, ok := s.View().Options().Analyzers[analyzerName]
+	if !ok {
+		return nil, errors.Errorf("unexpected analyzer: %s", analyzerName)
+	}
+	act, err := s.actionHandle(ctx, packageID(pkgID), source.ParseFull, analyzer)
+	if err != nil {
+		return nil, err
+	}
+	errs, _, err := act.analyze(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, err := range errs {
+		if err.Category != analyzerName {
 			continue
 		}
-		for _, d := range diagnostics {
-			if d.Message != pdiag.Message {
-				continue
-			}
-			if protocol.CompareRange(d.Range, pdiag.Range) != 0 {
-				continue
-			}
-			return &d, nil
+		if err.Message != msg {
+			continue
 		}
-	}
-	return nil, errors.Errorf("no matching diagnostic for %v", pdiag)
-}
-
-func (p *pkg) FindFile(ctx context.Context, uri span.URI) (source.ParseGoHandle, source.Package, error) {
-	// Special case for ignored files.
-	if p.view.Ignore(uri) {
-		return p.view.findIgnoredFile(ctx, uri)
-	}
-
-	queue := []*pkg{p}
-	seen := make(map[string]bool)
-
-	for len(queue) > 0 {
-		pkg := queue[0]
-		queue = queue[1:]
-		seen[pkg.ID()] = true
-
-		for _, ph := range pkg.files {
-			if ph.File().Identity().URI == uri {
-				return ph, pkg, nil
-			}
+		if protocol.CompareRange(err.Range, rng) != 0 {
+			continue
 		}
-		for _, dep := range pkg.imports {
-			if !seen[dep.ID()] {
-				queue = append(queue, dep)
-			}
-		}
+		return err, nil
 	}
-	return nil, nil, errors.Errorf("no file for %s", uri)
+	return nil, errors.Errorf("no matching diagnostic for %s:%v", pkgID, analyzerName)
 }

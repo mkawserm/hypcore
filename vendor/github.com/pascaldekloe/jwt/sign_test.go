@@ -1,16 +1,107 @@
 package jwt
 
 import (
+	"bytes"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
+	"errors"
 	"math/big"
 	"reflect"
 	"testing"
+	"time"
 )
+
+func TestClaimsSyncNothing(t *testing.T) {
+	var c Claims
+	if _, err := c.FormatWithoutSign("none"); err != nil {
+		t.Fatal("format error:", err)
+	}
+	if string(c.Raw) != "{}" {
+		t.Errorf(`got JSON %q, want "{}"`, c.Raw)
+	}
+	if c.Set != nil {
+		t.Errorf("claims set %#v not nil", c.Set)
+	}
+}
+
+// Copy Registered into map.
+func TestClaimsSync(t *testing.T) {
+	offset := time.Unix(1537622794, 0)
+	c := Claims{
+		// cover all registered fields
+		Registered: Registered{
+			Issuer:    "a",
+			Subject:   "b",
+			Audiences: []string{"c"},
+			Expires:   NewNumericTime(offset.Add(time.Minute)),
+			NotBefore: NewNumericTime(offset.Add(-time.Second)),
+			Issued:    NewNumericTime(offset),
+			ID:        "d",
+		},
+		Set: make(map[string]interface{}),
+	}
+
+	if _, err := c.FormatWithoutSign("none"); err != nil {
+		t.Fatal("format error:", err)
+	}
+	const want = `{"aud":"c","exp":1537622854,"iat":1537622794,"iss":"a","jti":"d","nbf":1537622793,"sub":"b"}`
+	if got := string(c.Raw); got != want {
+		t.Errorf("got JSON %q, want %q", got, want)
+	}
+	if len(c.Set) != 7 {
+		t.Errorf("got %d entries in claims set %#v, want 7", len(c.Set), c.Set)
+	}
+}
+
+// Merge Registered into claims set map.
+func TestClaimsSyncMerge(t *testing.T) {
+	c := Claims{
+		Registered: Registered{
+			Subject:   "kkazanova",
+			Audiences: []string{"KGB", "RU"},
+		},
+		Set: map[string]interface{}{
+			"iss": nil,
+			"sub": "karcher",
+			"aud": "ISIS",
+		},
+	}
+
+	if s, ok := c.String("aud"); ok {
+		t.Errorf("got audience string %q for 2 element array value", s)
+	}
+
+	if _, err := c.FormatWithoutSign("none"); err != nil {
+		t.Fatal("format error:", err)
+	}
+	const want = `{"aud":["KGB","RU"],"iss":null,"sub":"kkazanova"}`
+	if got := string(c.Raw); got != want {
+		t.Errorf("got JSON %q, want %q", got, want)
+	}
+}
+
+func TestHeaderFormat(t *testing.T) {
+	claims := &Claims{KeyID: "№1"}
+	token, err := claims.FormatWithoutSign("none",
+		json.RawMessage(`{"typ": "JWT", "aud": "armory"}`),
+		json.RawMessage(`{"http://isis.us/~rodney/Approvals#RPG-7": ["marcher"]}`))
+	if err != nil {
+		t.Fatal("format error:", err)
+	}
+	const want = "eyJ0eXAiOiJKV1QiLCJhdWQiOiJhcm1vcnkiLCJodHRwOi8vaXNpcy51cy9-cm9kbmV5L0FwcHJvdmFscyNSUEctNyI6WyJtYXJjaGVyIl0sImFsZyI6Im5vbmUiLCJraWQiOiLihJYxIn0.e30"
+	if string(token) != want {
+		t.Errorf("got token %q, want %q", token, want)
+	}
+
+	_, err = claims.FormatWithoutSign("X", json.RawMessage("broken"))
+	if !errors.As(err, new(*json.SyntaxError)) {
+		t.Errorf("got error %#v, want a json.SyntaxError", err)
+	}
+}
 
 func TestECDSASign(t *testing.T) {
 	const want = "sweet-44 tender-9 hot-juicy porkchops"
@@ -24,10 +115,10 @@ func TestECDSASign(t *testing.T) {
 
 	got, err := ECDSACheck(token, &testKeyEC384.PublicKey)
 	if err != nil {
-		t.Fatal("check error:", err)
+		t.Fatalf("%q check error: %s", token, err)
 	}
 	if got.KeyID != want {
-		t.Errorf("got key ID %q, want %q", got.KeyID, want)
+		t.Errorf("%q got key ID %q, want %q", token, got.KeyID, want)
 	}
 }
 
@@ -43,10 +134,10 @@ func TestEdDSASign(t *testing.T) {
 
 	got, err := EdDSACheck(token, testKeyEd25519Public)
 	if err != nil {
-		t.Fatal("check error:", err)
+		t.Fatalf("%q check error: %s", token, err)
 	}
 	if !reflect.DeepEqual(got.Audiences, want) {
-		t.Errorf("got audience %q, want %q", got.Audiences, want)
+		t.Errorf("%q got audience %q, want %q", token, got.Audiences, want)
 	}
 }
 
@@ -177,9 +268,17 @@ func TestFormatHeader(t *testing.T) {
 	}
 
 	for alg := range algs {
-		header := new(Claims).formatHeader(alg)
-
-		headerJSON, err := encoding.DecodeString(header)
+		token, err := new(Claims).FormatWithoutSign(alg)
+		if err != nil {
+			t.Errorf("error for %q: %s", alg, err)
+			continue
+		}
+		i := bytes.IndexByte(token, '.')
+		if i < 0 {
+			t.Errorf("malformed token for %q: %q", alg, token)
+			continue
+		}
+		headerJSON, err := encoding.DecodeString(string(token[:i]))
 		if err != nil {
 			t.Errorf("malformed header for %q: %s", alg, err)
 			continue

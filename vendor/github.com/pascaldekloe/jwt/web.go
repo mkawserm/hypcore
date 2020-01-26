@@ -18,8 +18,8 @@ const MIMEType = "application/jwt"
 // OAuthURN is the IANA registered OAuth URI.
 const OAuthURN = "urn:ietf:params:oauth:token-type:jwt"
 
-// ErrNoHeader signals an HTTP request without Authorization.
-var ErrNoHeader = errors.New("jwt: no HTTP Authorization")
+// ErrNoHeader signals an HTTP request without authorization.
+var ErrNoHeader = errors.New("jwt: no HTTP authorization header")
 
 var errAuthSchema = errors.New("jwt: want Bearer schema")
 
@@ -74,14 +74,22 @@ func (keys *KeyRegister) CheckHeader(r *http.Request) (*Claims, error) {
 }
 
 func tokenFromHeader(r *http.Request) ([]byte, error) {
-	auth := r.Header.Get("Authorization")
-	if auth == "" {
+	h := r.Header["Authorization"]
+	if h == nil {
 		return nil, ErrNoHeader
 	}
-	if !strings.HasPrefix(auth, "Bearer ") {
+
+	// “Multiple message-header fields with the same field-name MAY be
+	// present in a message if and only if the entire field-value for that
+	//  header field is defined as a comma-separated list.”
+	// — “Hypertext Transfer Protocol” RFC 2616, subsection 4.2
+	auth := strings.Join(h, ", ")
+
+	const prefix = "Bearer "
+	if !strings.HasPrefix(auth, prefix) {
 		return nil, errAuthSchema
 	}
-	return []byte(auth[7:]), nil
+	return []byte(auth[len(prefix):]), nil
 }
 
 // ECDSASignHeader applies ECDSASign on a HTTP request.
@@ -160,6 +168,18 @@ type Handler struct {
 	// This feature may be used to further customise requests or
 	// as a filter or as an extended http.HandlerFunc.
 	Func func(http.ResponseWriter, *http.Request, *Claims) (pass bool)
+
+	// Error sends a custom response. Nil defaults to http.Error.
+	// The appropriate WWW-Authenticate value is already present.
+	Error func(w http.ResponseWriter, error string, statusCode int)
+}
+
+func (h *Handler) error(w http.ResponseWriter, error string, statusCode int) {
+	if h.Error != nil {
+		h.Error(w, error, statusCode)
+	} else {
+		http.Error(w, error, statusCode)
+	}
 }
 
 // ServeHTTP honors the http.Handler interface.
@@ -172,14 +192,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.Header().Set("WWW-Authenticate", `Bearer error="invalid_token", error_description=`+strconv.QuoteToASCII(err.Error()))
 		}
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		h.error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	// verify time constraints
 	if !claims.Valid(time.Now()) {
 		w.Header().Set("WWW-Authenticate", `Bearer error="invalid_token", error_description="jwt: time constraints exceeded"`)
-		http.Error(w, "jwt: time constraints exceeded", http.StatusUnauthorized)
+		h.error(w, "jwt: time constraints exceeded", http.StatusUnauthorized)
 		return
 	}
 
@@ -207,7 +227,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			msg := "jwt: want string for claim " + claimName
 			w.Header().Set("WWW-Authenticate", `Bearer error="invalid_token", error_description=`+strconv.QuoteToASCII(msg))
-			http.Error(w, msg, http.StatusUnauthorized)
+			h.error(w, msg, http.StatusUnauthorized)
 			return
 		}
 

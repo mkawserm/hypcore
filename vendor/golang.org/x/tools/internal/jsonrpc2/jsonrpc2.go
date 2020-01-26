@@ -110,7 +110,7 @@ func (c *Conn) Notify(ctx context.Context, method string, params interface{}) (e
 		return fmt.Errorf("marshalling notify request: %v", err)
 	}
 	for _, h := range c.handlers {
-		ctx = h.Request(ctx, Send, request)
+		ctx = h.Request(ctx, c, Send, request)
 	}
 	defer func() {
 		for _, h := range c.handlers {
@@ -145,7 +145,7 @@ func (c *Conn) Call(ctx context.Context, method string, params, result interface
 		return fmt.Errorf("marshalling call request: %v", err)
 	}
 	for _, h := range c.handlers {
-		ctx = h.Request(ctx, Send, request)
+		ctx = h.Request(ctx, c, Send, request)
 	}
 	// we have to add ourselves to the pending map before we send, otherwise we
 	// are racing the response
@@ -175,7 +175,7 @@ func (c *Conn) Call(ctx context.Context, method string, params, result interface
 	select {
 	case response := <-rchan:
 		for _, h := range c.handlers {
-			ctx = h.Response(ctx, Receive, response)
+			ctx = h.Response(ctx, c, Receive, response)
 		}
 		// is it an error response?
 		if response.Error != nil {
@@ -233,7 +233,7 @@ func (r *Request) Reply(ctx context.Context, result interface{}, err error) erro
 		return fmt.Errorf("reply invoked more than once")
 	}
 	if r.IsNotify() {
-		return fmt.Errorf("reply not invoked with a valid call")
+		return fmt.Errorf("reply not invoked with a valid call: %v, %s", r.Method, r.Params)
 	}
 	// reply ends the handling phase of a call, so if we are not yet
 	// parallel we should be now. The go routine is allowed to continue
@@ -262,7 +262,7 @@ func (r *Request) Reply(ctx context.Context, result interface{}, err error) erro
 		return err
 	}
 	for _, h := range r.conn.handlers {
-		ctx = h.Response(ctx, Send, response)
+		ctx = h.Response(ctx, r.conn, Send, response)
 	}
 	n, err := r.conn.stream.Write(ctx, data)
 	for _, h := range r.conn.handlers {
@@ -347,7 +347,7 @@ func (c *Conn) Run(runCtx context.Context) error {
 				},
 			}
 			for _, h := range c.handlers {
-				reqCtx = h.Request(reqCtx, Receive, &req.WireRequest)
+				reqCtx = h.Request(reqCtx, c, Receive, &req.WireRequest)
 				reqCtx = h.Read(reqCtx, n)
 			}
 			c.setHandling(req, true)

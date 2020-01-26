@@ -47,13 +47,16 @@ type Instruction struct {
 	IsConditional    bool
 	CancellingInputs bool
 
+	// ISA is the list of required instruction set extensions.
+	ISA []string
+
 	// CFG.
 	Pred []*Instruction
 	Succ []*Instruction
 
 	// LiveIn/LiveOut are sets of live register IDs pre/post execution.
-	LiveIn  reg.Set
-	LiveOut reg.Set
+	LiveIn  reg.MaskSet
+	LiveOut reg.MaskSet
 }
 
 func (i *Instruction) node() {}
@@ -166,6 +169,9 @@ type Function struct {
 
 	// Register allocation.
 	Allocation reg.Allocation
+
+	// ISA is the list of required instruction set extensions.
+	ISA []string
 }
 
 func (f *Function) section() {}

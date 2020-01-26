@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"strconv"
+	"fmt"
 	"time"
 )
 
@@ -70,7 +70,7 @@ type AlgError string
 
 // Error honors the error interface.
 func (e AlgError) Error() string {
-	return "jwt: algorithm " + strconv.Quote(string(e)) + " not in use"
+	return fmt.Sprintf("jwt: algorithm %q not in use", string(e))
 }
 
 // ErrNoSecret protects against programming and configuration mistakes.
@@ -89,7 +89,7 @@ const (
 	id        = "jti"
 )
 
-// Registered “JSON Web Token Claims” is a subset of the IANA registration.
+// Registered “JSON Web Token Claims” has a subset of the IANA registration.
 // See <https://www.iana.org/assignments/jwt/claims.csv> for the full listing.
 //
 // Each field is optional—there are no required claims. The string values are
@@ -154,67 +154,17 @@ type Claims struct {
 	Raw json.RawMessage
 
 	// “The "kid" (key ID) Header Parameter is a hint indicating which key
-	// was used to secure the JWS.  This parameter allows originators to
-	// explicitly signal a change of key to recipients.  The structure of
-	// the "kid" value is unspecified.  Its value MUST be a case-sensitive
-	// string.  Use of this Header Parameter is OPTIONAL.”
+	// was used to secure the JWS. This parameter allows originators to
+	// explicitly signal a change of key to recipients. The structure of the
+	// "kid" value is unspecified. Its value MUST be a case-sensitive
+	// string. Use of this Header Parameter is OPTIONAL.”
 	// — “JSON Web Signature (JWS)” RFC 7515, subsection 4.1.4
 	KeyID string
 }
 
-// Sync updates the Raw field. When the Set field is not nil,
-// then all non-zero Registered values are copied into the map.
-func (c *Claims) sync() error {
-	var payload interface{}
-
-	if c.Set == nil {
-		payload = &c.Registered
-	} else {
-		payload = c.Set
-
-		if c.Issuer != "" {
-			c.Set[issuer] = c.Issuer
-		}
-		if c.Subject != "" {
-			c.Set[subject] = c.Subject
-		}
-		switch len(c.Audiences) {
-		case 0:
-			break
-		case 1: // single string
-			c.Set[audience] = c.Audiences[0]
-		default:
-			array := make([]interface{}, len(c.Audiences))
-			for i, s := range c.Audiences {
-				array[i] = s
-			}
-			c.Set[audience] = array
-		}
-		if c.Expires != nil {
-			c.Set[expires] = float64(*c.Expires)
-		}
-		if c.NotBefore != nil {
-			c.Set[notBefore] = float64(*c.NotBefore)
-		}
-		if c.Issued != nil {
-			c.Set[issued] = float64(*c.Issued)
-		}
-		if c.ID != "" {
-			c.Set[id] = c.ID
-		}
-	}
-
-	bytes, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-	c.Raw = json.RawMessage(bytes)
-	return nil
-}
-
 // Valid returns whether the claims set may be accepted for processing at the
-// given moment in time. If time is zero, then Valid returns whether there are
-// any time constraints at all.
+// given moment in time. If the time is zero, then Valid returns whether there
+// are no time constraints.
 func (c *Claims) Valid(t time.Time) bool {
 	exp, expOK := c.Number(expires)
 	nbf, nbfOK := c.Number(notBefore)

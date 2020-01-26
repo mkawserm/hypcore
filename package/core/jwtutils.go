@@ -111,7 +111,7 @@ func VerifyJWT(token []byte,
 			}
 		} else {
 			if logToGlog {
-				glog.Errorln("JWT Time expired\n")
+				glog.Errorln("JWT Time expired")
 			}
 		}
 	} else {

@@ -1,0 +1,92 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '17 12 * * 6'
+
+name: ci
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [1.13.x]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Configure Go Environment
+      run: |
+        echo ::set-env name=GOPATH::${{ runner.workspace }}
+        echo ::add-path::${{ runner.workspace }}/bin
+    - name: Go Environment
+      run: go env
+    - name: Checkout code
+      uses: actions/checkout@v1
+    - name: Bootstrap
+      run: ./script/bootstrap
+
+    - name: Build
+      run: go build ./...
+    - name: Test
+      run: go test -bench . ./...
+    - name: Coverage
+      run: ./script/coverage
+
+    - name: Upload Unit Test Coverage
+      uses: codecov/codecov-action@v1.0.5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: unittests.coverprofile
+        flags: unittests
+    - name: Upload Integration Test Coverage
+      uses: codecov/codecov-action@v1.0.5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: integration.coverprofile
+        flags: integration
+
+  lint:
+    strategy:
+      matrix:
+        go-version: [1.13.x]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Configure Go Environment
+      run: |
+        echo ::set-env name=GOPATH::${{ runner.workspace }}
+        echo ::add-path::${{ runner.workspace }}/bin
+    - name: Go Environment
+      run: go env
+    - name: Checkout code
+      uses: actions/checkout@v1
+    - name: Bootstrap
+      run: ./script/bootstrap
+    - name: Lint
+      run: ./script/lint
+
+  thirdparty:
+    strategy:
+      matrix:
+        go-version: [1.13.x]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v1
+    - name: Run Third-Party Tests
+      working-directory: ./tests/thirdparty
+      run: go test -v -pkgs packages.json
